@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}세온시스템 내부 운영 콘솔{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'opswatch/app.css' %}">
+</head>
+<body class="{% block body_class %}console{% endblock %}">
+  <div class="lab-banner">{{ lab_notice }}</div>
+  <aside class="sidebar">
+    <a class="brand" href="{% url 'staff' %}">
+      <span class="brand-mark">SE</span>
+      <span>
+        <strong>세온시스템</strong>
+        <small>내부 운영 콘솔</small>
+      </span>
+    </a>
+    <p class="side-label">보안관제</p>
+    <nav>
+      <a class="{% if request.path == '/staff/' %}active{% endif %}" href="{% url 'staff' %}">당직 연락망</a>
+      {% if user.is_authenticated %}
+        <a class="{% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">개요</a>
+        <a class="{% if request.path == '/support/' %}active{% endif %}" href="{% url 'support' %}">수집 모듈</a>
+        <a class="{% if '/admin/diagnostics/' in request.path %}active{% endif %}" href="{% url 'diagnostics' %}">호스트 진단</a>
+      {% endif %}
+    </nav>
+    <div class="side-foot">
+      {% if user.is_authenticated %}
+        <p>{{ user.username }}</p>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit">로그아웃</button>
+        </form>
+      {% else %}
+        <a class="btn" href="{% url 'login' %}">로그인</a>
+      {% endif %}
+    </div>
+  </aside>
+  <main class="workspace">
+    {% block content %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

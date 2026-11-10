@@ -1,0 +1,48 @@
+{% extends "inventory/base.html" %}
+{% block title %}당직 연락망 · 세온시스템{% endblock %}
+{% block content %}
+<header class="module-head">
+  <div>
+    <p class="kicker">Agents</p>
+    <h1>당직 연락망</h1>
+  </div>
+  <p class="muted">장애 에스컬레이션과 콘솔 ID 확인용입니다.</p>
+</header>
+<section class="card module">
+  <header>인수인계</header>
+  <p>
+    22:00 이후 콘솔 장애는 야간유지보수 담당으로 올립니다.
+    로그인 ID는 에이전트 표의 콘솔 ID를 사용합니다.
+    초기 비밀번호는 배포 메모의 기본값이 남아 있는 경우가 있습니다.
+  </p>
+</section>
+<section class="card module">
+  <header>등록 계정 {{ employees|length }}</header>
+  <table class="data">
+    <thead>
+      <tr>
+        <th>이름</th>
+        <th>부서</th>
+        <th>직책</th>
+        <th>콘솔 ID</th>
+        <th>내선</th>
+        <th>업무</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for emp in employees %}
+        <tr>
+          <td><span class="dot {% if emp.login_id %}warn{% else %}ok{% endif %}"></span>{{ emp.name }}</td>
+          <td>{{ emp.department }}</td>
+          <td>{{ emp.title }}</td>
+          <td>{% if emp.login_id %}<code>{{ emp.login_id }}</code>{% else %}—{% endif %}</td>
+          <td>{{ emp.extension }}</td>
+          <td>{{ emp.duty }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6">등록된 연락망이 없습니다.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "inventory/base.html" %}
+{% block title %}수집 모듈 · 세온시스템{% endblock %}
+{% block content %}
+<header class="module-head">
+  <div>
+    <p class="kicker">Modules</p>
+    <h1>수집 모듈</h1>
+  </div>
+  <p class="muted">로그인된 운영 계정만 받을 수 있습니다.</p>
+</header>
+<section class="card module">
+  <header>healthcheck</header>
+  <p>
+    내부 진단 API를 호출하는 당직 수집 스크립트입니다.
+    호출 대상과 토큰은 스크립트 안에 적혀 있습니다.
+  </p>
+  <p>
+    <a class="btn primary" href="{% url 'support_script' %}">opswatch-healthcheck.sh 받기</a>
+  </p>
+  <p class="muted">받은 뒤 내용을 확인하고, 호스트 진단에서 같은 토큰을 사용합니다.</p>
+</section>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "inventory/base.html" %}
+{% load static %}
+{% block title %}호스트 진단 · 세온시스템{% endblock %}
+{% block content %}
+<header class="module-head">
+  <div>
+    <p class="kicker">Diagnostics</p>
+    <h1>호스트 진단</h1>
+  </div>
+</header>
+<p>운영 세션과 내부 API 토큰이 모두 있어야 실행됩니다. 출력은 텍스트로만 표시됩니다.</p>
+<p class="muted">Django 관리자 사이트 아님. 당직 콘솔 전용 화면입니다.</p>
+  {% if not diagnostics_enabled %}
+    <p class="flash warn">이 런타임에서는 진단 실행이 꺼져 있습니다. 운영 컨테이너에서만 동작합니다.</p>
+  {% endif %}
+
+<section class="card">
+  <form id="diagnose-form">
+    {% csrf_token %}
+    <label>
+      내부 API 토큰
+      <input type="text" name="token" autocomplete="off" spellcheck="false" required>
+    </label>
+    <label>
+      진단 대상
+      <input type="text" name="target" placeholder="web-01.lab.local" required>
+    </label>
+    <button class="btn primary" type="submit">진단 실행</button>
+  </form>
+  <p id="diag-status" class="muted">대기</p>
+  <pre id="diag-output" class="output" hidden></pre>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'opswatch/diagnostics.js' %}"></script>
+{% endblock %}

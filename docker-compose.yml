@@ -1,0 +1,81 @@
+name: opswatch-lab
+
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: opswatch
+      MYSQL_USER: opswatch
+      MYSQL_PASSWORD: opswatch-lab-only
+      MYSQL_ROOT_PASSWORD: opswatch-root-lab-only
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-name-resolve
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - lab
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-popswatch-root-lab-only"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: "no"
+    privileged: false
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    cpus: "0.75"
+    pids_limit: 128
+    read_only: false
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DJANGO_SECRET_KEY: lab-only-not-a-real-secret-opswatch-compose
+      DJANGO_DEBUG: "0"
+      MYSQL_HOST: db
+      MYSQL_DATABASE: opswatch
+      MYSQL_USER: opswatch
+      MYSQL_PASSWORD: opswatch-lab-only
+      OPSWATCH_INTERNAL_TOKEN: ow-lab-internal-9f3c2a1b7e44
+      OPSWATCH_RUNTIME: container
+      OPSWATCH_ENABLE_DIAGNOSTICS: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    extra_hosts:
+      - "web-01.lab.local:127.0.0.1"
+      - "db-01.lab.local:127.0.0.1"
+      - "mon-01.lab.local:127.0.0.1"
+    networks:
+      - lab
+      - ingress
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /run:size=8m,mode=0755
+    privileged: false
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: "0.75"
+    pids_limit: 128
+    restart: "no"
+
+networks:
+  lab:
+    internal: true
+  ingress:
+    driver: bridge
+
+volumes:
+  mysql_data:
