@@ -10,21 +10,31 @@
     outputEl.hidden = true;
     outputEl.textContent = "";
 
-    const tokenInput = form.querySelector('[name="token"]');
     const targetInput = form.querySelector('[name="target"]');
     const csrfInput = form.querySelector('[name="csrfmiddlewaretoken"]');
 
     try {
+      const tokenResponse = await fetch("/api/internal/token/", {
+        method: "GET",
+        credentials: "same-origin",
+      });
+      const tokenPayload = await tokenResponse.json();
+      if (!tokenResponse.ok || !tokenPayload.token) {
+        statusEl.textContent = "오류";
+        outputEl.hidden = false;
+        outputEl.textContent = tokenPayload.error || "내부 토큰을 받을 수 없습니다.";
+        return;
+      }
+
       const response = await fetch("/api/internal/diagnose/", {
         method: "POST",
         credentials: "same-origin",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": csrfInput ? csrfInput.value : "",
-          "X-OpsWatch-Token": tokenInput.value,
+          "X-OpsWatch-Token": tokenPayload.token,
         },
         body: JSON.stringify({
-          token: tokenInput.value,
           target: targetInput.value,
         }),
       });

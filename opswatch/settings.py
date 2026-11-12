@@ -109,7 +109,8 @@ CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000", "http://localhost:8000"]
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
 
-# Fake internal token used by the lab support script. Not a real credential.
+# Fake internal token expected by /api/internal/diagnose/. Not a real credential.
+# INTENTIONAL LAB WEAKNESS: /api/internal/token/ returns this static value.
 OPSWATCH_INTERNAL_TOKEN = os.environ.get(
     "OPSWATCH_INTERNAL_TOKEN",
     "ow-lab-internal-9f3c2a1b7e44",
@@ -119,7 +120,7 @@ OPSWATCH_INTERNAL_TOKEN = os.environ.get(
 OPSWATCH_RUNTIME = os.environ.get("OPSWATCH_RUNTIME", "host")
 OPSWATCH_ENABLE_DIAGNOSTICS = os.environ.get("OPSWATCH_ENABLE_DIAGNOSTICS", "0") == "1"
 
-SUPPORT_SCRIPT_PATH = BASE_DIR / "support_scripts" / "opswatch-healthcheck.sh"
+
 
 # INTENTIONAL LAB WEAKNESS: no login attempt limit / lockout is configured.
 # AUTH_PASSWORD_VALIDATORS is empty so the seeded maintenance password can stay weak.

@@ -12,18 +12,26 @@ from inventory.services.diagnostics import (
 )
 
 
-class SupportScriptTests(TestCase):
+class TokenIssueTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         call_command("seed_lab", verbosity=0)
 
-    def test_script_contains_fake_token_after_login(self):
+    def test_issues_static_token_after_login(self):
         self.client.login(username="maint", password="maint123")
-        response = self.client.get("/support/scripts/healthcheck.sh")
+        response = self.client.get("/api/internal/token/")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["token"], "ow-lab-internal-9f3c2a1b7e44")
+        self.assertIsNone(payload["expires_in"])
+
+    def test_frontend_does_not_hardcode_token(self):
+        response = self.client.get("/static/opswatch/diagnostics.js")
         self.assertEqual(response.status_code, 200)
         body = b"".join(response.streaming_content).decode("utf-8")
-        self.assertIn("ow-lab-internal-9f3c2a1b7e44", body)
-        self.assertIn("/api/internal/diagnose/", body)
+        self.assertNotIn("ow-lab-internal-9f3c2a1b7e44", body)
+        self.assertIn("/api/internal/token/", body)
+
 
 
 class DiagnoseApiTests(TestCase):
@@ -31,14 +39,16 @@ class DiagnoseApiTests(TestCase):
     def setUpTestData(cls):
         call_command("seed_lab", verbosity=0)
 
-    def test_requires_session(self):
+    def test_token_alone_skips_session(self):
         response = self.client.post(
             "/api/internal/diagnose/",
-            data=json.dumps({"token": "ow-lab-internal-9f3c2a1b7e44", "target": "web-01.lab.local"}),
+            data=json.dumps({"target": "web-01.lab.local"}),
             content_type="application/json",
             HTTP_X_OPSWATCH_TOKEN="ow-lab-internal-9f3c2a1b7e44",
         )
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("실습 컨테이너", response.json()["error"])
+
 
     def test_requires_token(self):
         self.client.login(username="maint", password="maint123")
@@ -72,7 +82,6 @@ class DiagnoseApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_successful_diagnosis_is_mocked(self):
-        self.client.login(username="maint", password="maint123")
         fake = type("R", (), {"status": "ok", "output": "127.0.0.1 web-01.lab.local", "timed_out": False})()
         with patch("inventory.views.run_ping_diagnosis", return_value=fake):
             response = self.client.post(

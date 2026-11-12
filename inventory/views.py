@@ -3,8 +3,9 @@ import json
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
-from django.http import FileResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from inventory.charts import alert_evolution, decorate_servers
@@ -79,15 +80,18 @@ def support(request):
 
 
 @require_GET
-def support_script(request):
+def issue_token(request):
     if not request.user.is_authenticated:
-        return redirect("login")
-    path = settings.SUPPORT_SCRIPT_PATH
-    return FileResponse(
-        path.open("rb"),
-        as_attachment=True,
-        filename="opswatch-healthcheck.sh",
-        content_type="text/x-shellscript",
+        return _json_error("인증이 필요합니다.", 401)
+    # INTENTIONAL EDUCATIONAL WEAKNESS: not real issuance.
+    # Every authenticated user receives the same static lab token.
+    # No expiry, rotation, or per-user binding.
+    return JsonResponse(
+        {
+            "token": settings.OPSWATCH_INTERNAL_TOKEN,
+            "token_type": "internal",
+            "expires_in": None,
+        }
     )
 
 
@@ -105,11 +109,9 @@ def diagnostics_page(request):
     )
 
 
+@csrf_exempt  # INTENTIONAL EDUCATIONAL WEAKNESS: no session/CSRF. Static token is enough.
 @require_POST
 def diagnose_api(request):
-    if not request.user.is_authenticated:
-        return _json_error("인증이 필요합니다.", 401)
-
     token = request.headers.get("X-OpsWatch-Token", "")
     target = ""
     content_type = request.content_type or ""

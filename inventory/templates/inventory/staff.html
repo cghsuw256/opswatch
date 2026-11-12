@@ -1,48 +1,37 @@
 {% extends "inventory/base.html" %}
-{% block title %}당직 연락망 · 세온시스템{% endblock %}
+{% block title %}당직 연락망 · 국방망 인트라넷{% endblock %}
+{% block page_name %}당직 연락망{% endblock %}
 {% block content %}
 <header class="module-head">
   <div>
-    <p class="kicker">Agents</p>
+    <p class="kicker">Duty Directory</p>
     <h1>당직 연락망</h1>
+    <p class="module-description">부서별 담당자와 장애 대응 연락 체계를 확인합니다.</p>
   </div>
-  <p class="muted">장애 에스컬레이션과 콘솔 ID 확인용입니다.</p>
+  <span class="page-tag"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>담당자 {{ employees|length }}명</span>
 </header>
-<section class="card module">
-  <header>인수인계</header>
-  <p>
-    22:00 이후 콘솔 장애는 야간유지보수 담당으로 올립니다.
-    로그인 ID는 에이전트 표의 콘솔 ID를 사용합니다.
-    초기 비밀번호는 배포 메모의 기본값이 남아 있는 경우가 있습니다.
-  </p>
+<section class="notice" aria-label="인수인계 안내">
+  <svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>
+  <div><strong>야간 장애 대응 및 인수인계</strong><p>22:00 이후 콘솔 장애는 망당직 유지보수로 이관합니다. 로그인 ID는 아래 표의 콘솔 ID를 사용합니다.</p></div>
 </section>
-<section class="card module">
-  <header>등록 계정 {{ employees|length }}</header>
-  <table class="data">
-    <thead>
-      <tr>
-        <th>이름</th>
-        <th>부서</th>
-        <th>직책</th>
-        <th>콘솔 ID</th>
-        <th>내선</th>
-        <th>업무</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for emp in employees %}
-        <tr>
-          <td><span class="dot {% if emp.login_id %}warn{% else %}ok{% endif %}"></span>{{ emp.name }}</td>
-          <td>{{ emp.department }}</td>
-          <td>{{ emp.title }}</td>
-          <td>{% if emp.login_id %}<code>{{ emp.login_id }}</code>{% else %}—{% endif %}</td>
-          <td>{{ emp.extension }}</td>
-          <td>{{ emp.duty }}</td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="6">등록된 연락망이 없습니다.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<section class="card module directory">
+  <header><h2><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>담당자 목록 <span class="count-badge">{{ employees|length }}</span></h2><span class="panel-meta">부서 · 직책 · 업무</span></header>
+  <div class="table-scroll" role="region" aria-label="담당자 연락망" tabindex="0">
+    <table class="data">
+      <thead><tr><th scope="col">이름</th><th scope="col">부서</th><th scope="col">직책</th><th scope="col">콘솔 ID</th><th scope="col">내선</th><th scope="col">담당 업무</th></tr></thead>
+      <tbody>
+        {% for emp in employees %}
+          <tr>
+            <td>{{ emp.name }}</td><td>{{ emp.department }}</td><td>{{ emp.title }}</td>
+            <td>{% if emp.login_id %}<code>{{ emp.login_id }}</code>{% else %}<span class="muted">—</span>{% endif %}</td>
+            <td class="mono">{{ emp.extension }}</td><td class="muted">{{ emp.duty }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6">등록된 연락망이 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <footer class="panel-footer"><span>총 {{ employees|length }}명의 담당자</span><span>망운용 지원 / 당직 연락망</span></footer>
 </section>
 {% endblock %}

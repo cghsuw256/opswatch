@@ -18,7 +18,7 @@ class AccessControlTests(TestCase):
         response = self.client.get("/static/opswatch/app.css")
         self.assertEqual(response.status_code, 200)
         body = b"".join(response.streaming_content)
-        self.assertIn(b".lab-banner", body)
+        self.assertIn(b".mast", body)
 
     def test_health_has_no_secrets(self):
         response = self.client.get("/health/")
@@ -35,21 +35,25 @@ class AccessControlTests(TestCase):
             self.assertEqual(response.status_code, 302, path)
             self.assertIn("/login/", response["Location"])
 
-    def test_support_script_requires_login(self):
-        response = self.client.get("/support/scripts/healthcheck.sh")
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/login/", response["Location"])
+    def test_token_issue_requires_login(self):
+        response = self.client.get("/api/internal/token/")
+        self.assertEqual(response.status_code, 401)
+
 
     def test_authenticated_pages_render(self):
         self.assertTrue(self.client.login(username="maint", password="maint123"))
         dashboard = self.client.get("/dashboard/")
-        self.assertContains(dashboard, "시드된 모의 데이터")
+        self.assertContains(dashboard, "등록 에이전트")
         self.assertContains(dashboard, "web-01.lab.local")
         self.assertContains(dashboard, "알림 추이")
         self.assertContains(dashboard, "<polyline")
         self.assertNotContains(dashboard, "rack.svg")
         support = self.client.get("/support/")
         self.assertEqual(support.status_code, 200)
+        self.assertContains(support, "토큰 발급")
         diagnostics = self.client.get("/admin/diagnostics/")
         self.assertEqual(diagnostics.status_code, 200)
         self.assertContains(diagnostics, "Django 관리자 사이트 아님")
+        self.assertContains(diagnostics, "diagnostics.js")
+        self.assertNotContains(diagnostics, 'name="token"')
+        self.assertNotContains(diagnostics, "ow-lab-internal-9f3c2a1b7e44")

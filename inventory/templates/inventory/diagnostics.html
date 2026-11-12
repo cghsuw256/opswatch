@@ -1,35 +1,45 @@
 {% extends "inventory/base.html" %}
 {% load static %}
-{% block title %}호스트 진단 · 세온시스템{% endblock %}
+{% block title %}호스트 진단 · 국방망 인트라넷{% endblock %}
+{% block page_name %}호스트 진단{% endblock %}
 {% block content %}
 <header class="module-head">
-  <div>
-    <p class="kicker">Diagnostics</p>
-    <h1>호스트 진단</h1>
-  </div>
+  <div><p class="kicker">Host Diagnostics</p><h1>호스트 진단</h1><p class="module-description">대상 호스트의 이름 해석 결과와 진단 출력을 확인합니다.</p></div>
+  <span class="page-tag"><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>운영 도구</span>
 </header>
-<p>운영 세션과 내부 API 토큰이 모두 있어야 실행됩니다. 출력은 텍스트로만 표시됩니다.</p>
-<p class="muted">Django 관리자 사이트 아님. 당직 콘솔 전용 화면입니다.</p>
-  {% if not diagnostics_enabled %}
-    <p class="flash warn">이 런타임에서는 진단 실행이 꺼져 있습니다. 운영 컨테이너에서만 동작합니다.</p>
-  {% endif %}
-
-<section class="card">
-  <form id="diagnose-form">
-    {% csrf_token %}
-    <label>
-      내부 API 토큰
-      <input type="text" name="token" autocomplete="off" spellcheck="false" required>
-    </label>
-    <label>
-      진단 대상
-      <input type="text" name="target" placeholder="web-01.lab.local" required>
-    </label>
-    <button class="btn primary" type="submit">진단 실행</button>
-  </form>
-  <p id="diag-status" class="muted">대기</p>
-  <pre id="diag-output" class="output" hidden></pre>
-</section>
+{% if not diagnostics_enabled %}
+  <p class="flash warn">이 런타임에서는 진단 실행이 꺼져 있습니다. 운영 컨테이너에서만 동작합니다.</p>
+{% endif %}
+<div class="tool-grid">
+  <section class="card">
+    <header><h2><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>진단 요청</h2><span class="panel-meta">HOST LOOKUP</span></header>
+    <div class="card-body">
+      <form id="diagnose-form">
+        {% csrf_token %}
+        <div class="input-action">
+          <label>진단 대상<input type="text" name="target" placeholder="web-01.lab.local" aria-describedby="target-hint" required></label>
+          <button class="btn primary" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg>진단 실행</button>
+        </div>
+        <p class="field-hint" id="target-hint">조회할 호스트 이름 또는 IP 주소를 입력하세요.</p>
+      </form>
+    </div>
+    <div class="result-section">
+      <div class="result-heading"><h3>실행 결과 / OUTPUT</h3><p id="diag-status" role="status" aria-live="polite">대기</p></div>
+      <pre id="diag-output" class="output" aria-label="호스트 진단 출력" hidden></pre>
+    </div>
+  </section>
+  <aside class="card">
+    <header><h2>진단 정보</h2></header>
+    <div class="card-body">
+      <dl class="detail-list">
+        <div><dt>진단 방식</dt><dd>호스트 이름 해석</dd></div>
+        <div><dt>API 인증</dt><dd>내부 토큰</dd></div>
+        <div><dt>결과 형식</dt><dd>텍스트 출력</dd></div>
+      </dl>
+    </div>
+    <footer class="panel-footer"><a href="{% url 'support' %}">내부 토큰 관리 →</a></footer>
+  </aside>
+</div>
 {% endblock %}
 {% block scripts %}
 <script src="{% static 'opswatch/diagnostics.js' %}"></script>

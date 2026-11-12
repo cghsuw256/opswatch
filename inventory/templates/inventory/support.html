@@ -1,22 +1,40 @@
 {% extends "inventory/base.html" %}
-{% block title %}수집 모듈 · 세온시스템{% endblock %}
+{% load static %}
+{% block title %}내부 토큰 · 국방망 인트라넷{% endblock %}
+{% block page_name %}내부 토큰{% endblock %}
 {% block content %}
 <header class="module-head">
-  <div>
-    <p class="kicker">Modules</p>
-    <h1>수집 모듈</h1>
-  </div>
-  <p class="muted">로그인된 운영 계정만 받을 수 있습니다.</p>
+  <div><p class="kicker">Access Credentials</p><h1>내부 토큰</h1><p class="module-description">호스트 진단 API 호출에 사용하는 내부 인증 토큰을 발급받습니다.</p></div>
+  <span class="page-tag"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>API 인증 관리</span>
 </header>
-<section class="card module">
-  <header>healthcheck</header>
-  <p>
-    내부 진단 API를 호출하는 당직 수집 스크립트입니다.
-    호출 대상과 토큰은 스크립트 안에 적혀 있습니다.
-  </p>
-  <p>
-    <a class="btn primary" href="{% url 'support_script' %}">opswatch-healthcheck.sh 받기</a>
-  </p>
-  <p class="muted">받은 뒤 내용을 확인하고, 호스트 진단에서 같은 토큰을 사용합니다.</p>
-</section>
+<div class="tool-grid">
+  <section class="card module">
+    <header><h2><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>진단 API 토큰</h2><span class="panel-meta">INTERNAL API</span></header>
+    <div class="card-body">
+      <div class="tool-intro">
+        <span class="metric-icon"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg></span>
+        <div><h3>운영 도구 인증 토큰</h3><p>로그인된 운영 계정으로 토큰을 요청합니다.<br>발급 결과는 아래 응답 영역에서 확인할 수 있습니다.</p></div>
+      </div>
+      <button class="btn primary" id="issue-token" type="button"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>토큰 발급</button>
+    </div>
+    <div class="result-section">
+      <div class="result-heading"><h3>발급 결과</h3><p id="token-status" role="status" aria-live="polite">대기</p></div>
+      <pre id="token-output" class="output" aria-label="발급된 토큰" hidden></pre>
+    </div>
+  </section>
+  <aside class="card">
+    <header><h2>사용 정보</h2></header>
+    <div class="card-body">
+      <dl class="detail-list">
+        <div><dt>사용 대상</dt><dd>호스트 진단 API</dd></div>
+        <div><dt>인증 헤더</dt><dd><code>X-OpsWatch-Token</code></dd></div>
+        <div><dt>요청 권한</dt><dd>로그인된 운영 계정</dd></div>
+      </dl>
+    </div>
+    <footer class="panel-footer"><a href="{% url 'diagnostics' %}">호스트 진단으로 이동 →</a></footer>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'opswatch/support.js' %}"></script>
 {% endblock %}
