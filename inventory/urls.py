@@ -11,5 +11,7 @@ urlpatterns = [
     path("api/internal/token/", views.issue_token, name="issue_token"),
     path("admin/diagnostics/", views.diagnostics_page, name="diagnostics"),
     path("api/internal/diagnose/", views.diagnose_api, name="diagnose_api"),
+    path("ops/assistant/", views.assistant_page, name="assistant"),
+    path("api/internal/assistant/", views.assistant_api, name="assistant_api"),
     path("health/", views.health, name="health"),
 ]

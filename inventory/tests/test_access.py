@@ -30,7 +30,7 @@ class AccessControlTests(TestCase):
         self.assertNotIn("maint123", body)
 
     def test_auth_required_pages_redirect(self):
-        for path in ("/dashboard/", "/support/", "/admin/diagnostics/"):
+        for path in ("/dashboard/", "/support/", "/admin/diagnostics/", "/ops/assistant/"):
             response = self.client.get(path)
             self.assertEqual(response.status_code, 302, path)
             self.assertIn("/login/", response["Location"])

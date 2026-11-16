@@ -10,6 +10,9 @@
 {% if not diagnostics_enabled %}
   <p class="flash warn">이 런타임에서는 진단 실행이 꺼져 있습니다. 운영 컨테이너에서만 동작합니다.</p>
 {% endif %}
+{% if not diagnostics_token %}
+  <p class="flash warn">호스트 진단이 비활성화되어 있습니다. <a href="{% url 'support' %}">내부 토큰을 발급</a>받아 현재 로그인 세션의 진단을 활성화하세요.</p>
+{% endif %}
 <div class="tool-grid">
   <section class="card">
     <header><h2><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>진단 요청</h2><span class="panel-meta">HOST LOOKUP</span></header>
@@ -17,14 +20,14 @@
       <form id="diagnose-form">
         {% csrf_token %}
         <div class="input-action">
-          <label>진단 대상<input type="text" name="target" placeholder="web-01.lab.local" aria-describedby="target-hint" required></label>
-          <button class="btn primary" type="submit"><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg>진단 실행</button>
+          <label>진단 대상<input type="text" name="target" placeholder="web-01.lab.local" aria-describedby="target-hint" required{% if not diagnostics_token %} disabled{% endif %}></label>
+          <button class="btn primary" type="submit"{% if not diagnostics_token %} disabled{% endif %}><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg>진단 실행</button>
         </div>
         <p class="field-hint" id="target-hint">조회할 호스트 이름 또는 IP 주소를 입력하세요.</p>
       </form>
     </div>
     <div class="result-section">
-      <div class="result-heading"><h3>실행 결과 / OUTPUT</h3><p id="diag-status" role="status" aria-live="polite">대기</p></div>
+      <div class="result-heading"><h3>실행 결과 / OUTPUT</h3><p id="diag-status" role="status" aria-live="polite">{% if diagnostics_token %}대기{% else %}토큰 발급 필요{% endif %}</p></div>
       <pre id="diag-output" class="output" aria-label="호스트 진단 출력" hidden></pre>
     </div>
   </section>
@@ -34,6 +37,7 @@
       <dl class="detail-list">
         <div><dt>진단 방식</dt><dd>호스트 이름 해석</dd></div>
         <div><dt>API 인증</dt><dd>내부 토큰</dd></div>
+        <div><dt>활성화 상태</dt><dd>{% if diagnostics_token %}활성화됨{% else %}토큰 발급 필요{% endif %}</dd></div>
         <div><dt>결과 형식</dt><dd>텍스트 출력</dd></div>
       </dl>
     </div>
@@ -42,5 +46,6 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="{% static 'opswatch/diagnostics.js' %}"></script>
+{{ diagnostics_token|json_script:"diagnostics-token" }}
+<script src="{% static 'opswatch/diagnostics.js' %}?v=20261116-token-activation"></script>
 {% endblock %}

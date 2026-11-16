@@ -20,9 +20,9 @@
         outputEl.textContent = data.error || "토큰을 발급할 수 없습니다.";
         return;
       }
-      statusEl.textContent = "발급됨";
+      statusEl.textContent = "발급 완료";
       outputEl.hidden = false;
-      outputEl.textContent = data.token || "";
+      outputEl.textContent = "발급 완료";
     } catch (err) {
       statusEl.textContent = "오류";
       outputEl.hidden = false;

@@ -2,7 +2,7 @@ import json
 from unittest.mock import patch
 
 from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 
 from inventory.services.diagnostics import (
     DiagnosticsBusy,
@@ -25,12 +25,28 @@ class TokenIssueTests(TestCase):
         self.assertEqual(payload["token"], "ow-lab-internal-9f3c2a1b7e44")
         self.assertIsNone(payload["expires_in"])
 
-    def test_frontend_does_not_hardcode_token(self):
-        response = self.client.get("/static/opswatch/diagnostics.js")
-        self.assertEqual(response.status_code, 200)
-        body = b"".join(response.streaming_content).decode("utf-8")
-        self.assertNotIn("ow-lab-internal-9f3c2a1b7e44", body)
-        self.assertIn("/api/internal/token/", body)
+    def test_activation_is_limited_to_issuing_login_session(self):
+        self.client.post("/login/", {"username": "maint", "password": "maint123"})
+        page = self.client.get("/admin/diagnostics/")
+        self.assertEqual(page.context["diagnostics_token"], "")
+
+        issued = self.client.get("/api/internal/token/").json()["token"]
+        page = self.client.get("/admin/diagnostics/")
+        self.assertEqual(page.context["diagnostics_token"], issued)
+
+        other_session = Client()
+        other_session.login(username="maint", password="maint123")
+        self.assertEqual(
+            other_session.get("/admin/diagnostics/").context["diagnostics_token"],
+            "",
+        )
+
+        self.client.post("/logout/")
+        self.client.post("/login/", {"username": "maint", "password": "maint123"})
+        self.assertEqual(
+            self.client.get("/admin/diagnostics/").context["diagnostics_token"],
+            "",
+        )
 
 
 

@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}국방망 인트라넷{% endblock %}</title>
-  <link rel="stylesheet" href="{% static 'opswatch/app.css' %}?v=20261116">
+  <link rel="stylesheet" href="{% static 'opswatch/app.css' %}?v=20261116-assistant">
 </head>
 <body class="{% block body_class %}console{% endblock %}">
   <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -38,6 +38,7 @@
       {% if user.is_authenticated %}
         <a class="{% if request.path == '/support/' %}active{% endif %}" {% if request.path == '/support/' %}aria-current="page"{% endif %} href="{% url 'support' %}"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>내부 토큰<span class="nav-arrow" aria-hidden="true">›</span></a>
         <a class="{% if '/admin/diagnostics/' in request.path %}active{% endif %}" {% if '/admin/diagnostics/' in request.path %}aria-current="page"{% endif %} href="{% url 'diagnostics' %}"><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>호스트 진단<span class="nav-arrow" aria-hidden="true">›</span></a>
+        <a class="{% if request.path == '/ops/assistant/' %}active{% endif %}" {% if request.path == '/ops/assistant/' %}aria-current="page"{% endif %} href="{% url 'assistant' %}"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>상황실 에이전트<span class="nav-arrow" aria-hidden="true">›</span></a>
       {% endif %}
     </nav>
     <div class="sidebar-foot"><strong>OPSWATCH</strong>Infrastructure Management Console</div>

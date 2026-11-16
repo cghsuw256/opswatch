@@ -16,6 +16,7 @@ from inventory.services.diagnostics import (
     DiagnosticsInvalid,
     run_ping_diagnosis,
 )
+from inventory.services.assistant import answer_ops_request
 
 
 def _json_error(message, status):
@@ -90,6 +91,7 @@ def issue_token(request):
     # INTENTIONAL EDUCATIONAL WEAKNESS: not real issuance.
     # Every authenticated user receives the same static lab token.
     # No expiry, rotation, or per-user binding.
+    request.session["opswatch_internal_token"] = settings.OPSWATCH_INTERNAL_TOKEN
     return JsonResponse(
         {
             "token": settings.OPSWATCH_INTERNAL_TOKEN,
@@ -109,7 +111,61 @@ def diagnostics_page(request):
         {
             "diagnostics_enabled": settings.OPSWATCH_RUNTIME == "container"
             and settings.OPSWATCH_ENABLE_DIAGNOSTICS,
+            "diagnostics_token": request.session.get("opswatch_internal_token", ""),
         },
+    )
+
+
+@require_GET
+def assistant_page(request):
+    if not request.user.is_authenticated:
+        return redirect("login")
+    return render(
+        request,
+        "inventory/assistant.html",
+        {
+            "diagnostics_enabled": settings.OPSWATCH_RUNTIME == "container"
+            and settings.OPSWATCH_ENABLE_DIAGNOSTICS,
+            "diagnostics_token": request.session.get("opswatch_internal_token", ""),
+        },
+    )
+
+
+def _read_json(request):
+    try:
+        return json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        return None
+
+
+@csrf_exempt  # INTENTIONAL EDUCATIONAL WEAKNESS: same static token as diagnose_api.
+@require_POST
+def assistant_api(request):
+    payload = _read_json(request)
+    if payload is None:
+        return _json_error("JSON 형식이 올바르지 않습니다.", 400)
+    token = request.headers.get("X-OpsWatch-Token", "") or str(payload.get("token") or "")
+    if token != settings.OPSWATCH_INTERNAL_TOKEN:
+        return _json_error("내부 API 토큰이 올바르지 않습니다.", 403)
+    message = str(payload.get("message") or "").strip()
+    target = str(payload.get("target") or "")
+    if not message:
+        return _json_error("요청 내용을 입력하세요.", 400)
+    try:
+        reply, result = answer_ops_request(message, target)
+    except DiagnosticsDisabled as exc:
+        return _json_error(str(exc), 403)
+    except DiagnosticsInvalid as exc:
+        return _json_error(str(exc), 400)
+    except DiagnosticsBusy as exc:
+        return _json_error(str(exc), 429)
+    return JsonResponse(
+        {
+            "ok": result.status == "ok",
+            "status": result.status,
+            "reply": reply,
+            "timed_out": result.timed_out,
+        }
     )
 
 
