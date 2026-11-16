@@ -1,45 +1,56 @@
-def mock_series(hostname, base, salt):
-    seed = sum(ord(char) for char in hostname) + salt * 17
-    points = []
-    for index in range(12):
-        wobble = ((seed * (index + 3)) % 17) - 8
-        points.append(max(4, min(96, int(base) + wobble // 2)))
-    points[-1] = int(base)
-    return points
+"""Deterministic example event counts for the educational dashboard."""
+
+import math
+import random
+from datetime import timedelta
+
+from django.utils import timezone
 
 
-def spark_points(values, width=220, height=52):
-    step = width / (len(values) - 1)
-    coords = []
-    for index, value in enumerate(values):
-        x = round(index * step, 1)
-        y = round(height - (value / 100) * (height - 6) - 3, 1)
-        coords.append(f"{x},{y}")
-    return " ".join(coords)
-
-
-def decorate_servers(servers):
-    for index, server in enumerate(servers):
-        server.cpu_points = spark_points(mock_series(server.hostname, server.cpu_percent, 1))
-        server.mem_points = spark_points(mock_series(server.hostname, server.memory_percent, 2))
-        server.cpu_dash = round(server.cpu_percent * 1.759, 1)
-        server.mem_dash = round(server.memory_percent * 1.759, 1)
-        server.bar_x = 28 + index * 108
-        server.cpu_h = round(server.cpu_percent * 0.7, 1)
-        server.mem_h = round(server.memory_percent * 0.7, 1)
-        server.cpu_y = round(92 - server.cpu_h, 1)
-        server.mem_y = round(92 - server.mem_h, 1)
-    return servers
-
-
-def alert_evolution(servers, width=720, height=140):
-    if not servers:
-        return ""
-    buckets = [0] * 12
+def alert_evolution(servers):
+    # These are examples, not events derived from resource percentages.
+    profiles = (2, 4, 1, 9, 5, 3, 12, 6, 2, 7, 14, 4)
+    values = {key: [0] * 12 for key in ("info", "warn", "critical")}
     for server in servers:
-        series = mock_series(server.hostname, max(12, min(90, server.cpu_percent + 18)), 4)
-        for index, value in enumerate(series):
-            buckets[index] += value
-    peak = max(buckets) or 1
-    scaled = [max(6, round(value / peak * 100)) for value in buckets]
-    return spark_points(scaled, width=width, height=height)
+        if not server.seed_metrics:
+            continue
+        seed = sum((index + 1) * ord(char) for index, char in enumerate(server.hostname))
+        rng = random.Random(seed)
+        for index, activity in enumerate(profiles):
+            values["info"][index] += activity + rng.randrange(5)
+            values["warn"][index] += rng.randrange(activity // 2 + 2)
+            values["critical"][index] += rng.randrange(4) if index in (3, 6, 10) else 0
+
+    scale = max(4, math.ceil(max(max(row) for row in values.values()) / 4) * 4)
+    now = timezone.localtime().replace(minute=0, second=0, microsecond=0)
+    hours = [(now - timedelta(hours=11 - index)).strftime("%H:%M") for index in range(12)]
+    series = []
+    for key, label in (("info", "정보"), ("warn", "주의"), ("critical", "위험")):
+        markers = [
+            {
+                "x": round(15 + index * 690 / 11, 1),
+                "y": round(150 - value / scale * 140, 1),
+                "value": value,
+                "label": hours[index],
+            }
+            for index, value in enumerate(values[key])
+        ]
+        series.append(
+            {
+                "key": key,
+                "label": label,
+                "points": " ".join(f"{point['x']},{point['y']}" for point in markers),
+                "total": sum(values[key]),
+                "markers": markers,
+            }
+        )
+
+    totals = [sum(row[index] for row in values.values()) for index in range(12)]
+    peak_index = totals.index(max(totals))
+    return {
+        "series": series,
+        "ticks": [{"y": 150 - index * 35, "value": scale * index // 4} for index in range(5)],
+        "peak_count": totals[peak_index],
+        "peak_label": hours[peak_index],
+        "total": sum(totals),
+    }

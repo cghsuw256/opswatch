@@ -8,7 +8,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from inventory.charts import alert_evolution, decorate_servers
+from inventory.charts import alert_evolution
 from inventory.models import Employee, Inspection, Server
 from inventory.services.diagnostics import (
     DiagnosticsBusy,
@@ -56,8 +56,8 @@ def logout_view(request):
 def dashboard(request):
     if not request.user.is_authenticated:
         return redirect("login")
-    servers = decorate_servers(list(Server.objects.all()))
-    inspections = Inspection.objects.select_related("server")[:12]
+    servers = list(Server.objects.all())
+    inspections = list(Inspection.objects.select_related("server")[:12])
     return render(
         request,
         "inventory/dashboard.html",
@@ -65,9 +65,13 @@ def dashboard(request):
             "servers": servers,
             "inspections": inspections,
             "seed_metrics": any(server.seed_metrics for server in servers),
-            "alert_points": alert_evolution(servers),
+            "alert_chart": alert_evolution(servers),
             "agent_total": len(servers),
-            "agent_warn": sum(1 for server in servers if server.status != "ok"),
+            "agent_warn": sum(server.status == Server.STATUS_WARN for server in servers),
+            "agent_ok": sum(server.status == Server.STATUS_OK for server in servers),
+            "agent_down": sum(server.status == Server.STATUS_DOWN for server in servers),
+            "inspection_passed": sum(row.passed for row in inspections),
+            "inspection_failed": sum(not row.passed for row in inspections),
         },
     )
 

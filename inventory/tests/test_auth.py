@@ -13,9 +13,18 @@ class AuthTests(TestCase):
         self.assertContains(response, "계정 또는 비밀번호가 올바르지 않습니다.")
 
     def test_login_success(self):
-        response = self.client.post("/login/", {"username": "maint", "password": "maint123"})
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], "/dashboard/")
+        for username, password in (
+            ("maint", "maint123"),
+            ("seoyeon", "seoyeon123"),
+            ("minjun", "minjun123"),
+            ("harin", "harin123"),
+        ):
+            with self.subTest(username=username):
+                self.client.logout()
+                response = self.client.post("/login/", {"username": username, "password": password})
+                self.assertEqual(response.status_code, 302)
+                self.assertEqual(response["Location"], "/dashboard/")
+                self.assertEqual(self.client.get("/dashboard/").status_code, 200)
 
     def test_repeated_failures_do_not_lock_account(self):
         for _ in range(8):
@@ -41,6 +50,12 @@ class AuthTests(TestCase):
         from django.contrib.auth import get_user_model
         from inventory.models import Employee, Server
 
-        self.assertEqual(get_user_model().objects.filter(username="maint").count(), 1)
+        for username in ("maint", "seoyeon", "minjun", "harin"):
+            with self.subTest(username=username):
+                user = get_user_model().objects.get(username=username)
+                self.assertTrue(user.check_password(username + "123"))
+                self.assertFalse(user.is_staff)
+                self.assertFalse(user.is_superuser)
+                self.assertEqual(Employee.objects.filter(login_id=username).count(), 1)
         self.assertEqual(Employee.objects.count(), 4)
         self.assertEqual(Server.objects.count(), 3)

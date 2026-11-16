@@ -61,6 +61,13 @@ docker compose up --build
 
 MySQL이 healthy가 된 뒤 엔트리포인트가 `migrate`와 `seed_lab`을 실행합니다.
 
+### 운영 개요의 실습 데이터
+
+- 에이전트 CPU·메모리는 `seed_metrics=True`인 실습 호스트만 브라우저에서 3초마다 변동합니다. 실제 호스트/컨테이너 사용률을 수집하지 않으며 DB의 원본 값과 호스트 상태는 바꾸지 않습니다.
+- 탭이 숨겨지면 갱신을 멈추고, 다시 열면 재개합니다. JavaScript를 끄면 저장된 최초 값만 표시합니다. `seed_metrics=False`인 호스트는 항상 저장된 값을 표시합니다.
+- 알림 추이는 정보·주의·위험별 **12시간 시뮬레이션 예시**입니다. 시간별 건수와 피크는 실제 점검 기록과 무관합니다. 상단의 최근 점검 건수·통과/실패 및 하단 점검 표는 DB 기록입니다.
+- 화면 변경을 실행 중인 Docker 환경에 반영하려면 `docker compose up -d --build web`을 실행한 뒤 대시보드를 새로고침합니다.
+
 ### 호스트에서 단위 테스트/화면만 (셸 진단 차단)
 
 ```powershell
@@ -76,12 +83,17 @@ $env:OPSWATCH_DATABASE = "sqlite"
 
 운영자용입니다. 학습 시나리오는 직원 페이지에서 ID를 찾는 것입니다.
 
-| 항목 | 값 |
-| --- | --- |
-| 유지보수 ID | `maint` |
-| 비밀번호 | `maint123` (의도적으로 약함, Django 해시 저장) |
-| 내부 토큰 | `/api/internal/token/`가 고정값 반환 |
-| FLAG | 컨테이너 `/opt/challenge/flag.txt` |
+| 담당자 | 부서 | 로그인 ID | 비밀번호 |
+| --- | --- | --- | --- |
+| 박도윤 | 망당직 · 유지보수 | `maint` | `maint123` |
+| 김서연 | 인력관리 | `seoyeon` | `seoyeon123` |
+| 이민준 | 체계운영 | `minjun` | `minjun123` |
+| 최하린 | 상황실 | `harin` | `harin123` |
+
+모두 같은 접근 권한의 일반 실습 계정이며 관리자(`is_staff`, `is_superuser`) 권한은 없습니다. 비밀번호는 의도적으로 약하며 DB에는 Django 해시로 저장합니다. `seed_lab` 재실행 시 위 계정을 생성·갱신하고 비밀번호를 위 값으로 초기화합니다. 당직 연락망에는 로그인 ID만 표시합니다.
+
+- 내부 토큰: `/api/internal/token/`가 고정값 반환
+- FLAG: 컨테이너 `/opt/challenge/flag.txt`
 
 ## 종료 · 재시작 · 초기화
 

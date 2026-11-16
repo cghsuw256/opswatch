@@ -12,22 +12,30 @@ MAINT_PASSWORD = "maint123"
 
 
 class Command(BaseCommand):
-    help = "Idempotently seed fake employees, the weak maintenance user, servers, and inspections."
+    help = "Idempotently seed fake employees, lab login accounts, servers, and inspections."
 
     def handle(self, *args, **options):
         user_model = get_user_model()
-        user, _created = user_model.objects.update_or_create(
-            username=MAINT_USERNAME,
-            defaults={
-                "is_staff": False,
-                "is_superuser": False,
-                "email": "maint@opswatch.lab",
-                "first_name": "도윤",
-                "last_name": "박",
-            },
-        )
-        user.set_password(MAINT_PASSWORD)
-        user.save()
+        # Fake lab credentials, intentionally weak for the local exercise.
+        accounts = [
+            (MAINT_USERNAME, MAINT_PASSWORD, "maint@opswatch.lab", "도윤", "박"),
+            ("seoyeon", "seoyeon123", "seoyeon.kim@opswatch.lab", "서연", "김"),
+            ("minjun", "minjun123", "minjun.lee@opswatch.lab", "민준", "이"),
+            ("harin", "harin123", "harin.choi@opswatch.lab", "하린", "최"),
+        ]
+        for username, password, email, first_name, last_name in accounts:
+            user, _created = user_model.objects.update_or_create(
+                username=username,
+                defaults={
+                    "is_staff": False,
+                    "is_superuser": False,
+                    "email": email,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                },
+            )
+            user.set_password(password)
+            user.save()
 
         employees = [
             {
@@ -35,7 +43,7 @@ class Command(BaseCommand):
                 "name": "김서연",
                 "department": "인력관리",
                 "title": "사원",
-                "login_id": "",
+                "login_id": "seoyeon",
                 "extension": "4102",
                 "duty": "교육망 공지 및 계정 신청 안내",
             },
@@ -44,7 +52,7 @@ class Command(BaseCommand):
                 "name": "이민준",
                 "department": "체계운영",
                 "title": "선임",
-                "login_id": "",
+                "login_id": "minjun",
                 "extension": "4307",
                 "duty": "호스트 점검 일정 조율",
             },
@@ -62,7 +70,7 @@ class Command(BaseCommand):
                 "name": "최하린",
                 "department": "상황실",
                 "title": "사원",
-                "login_id": "",
+                "login_id": "harin",
                 "extension": "4408",
                 "duty": "시드 지표 대시보드 확인",
             },

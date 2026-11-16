@@ -1,4 +1,5 @@
 {% extends "inventory/base.html" %}
+{% load static %}
 {% block title %}개요 · 국방망 인트라넷{% endblock %}
 {% block page_name %}운영 개요{% endblock %}
 {% block content %}
@@ -12,45 +13,78 @@
 </header>
 <section class="kpi-row" aria-label="운영 현황 요약">
   <article>
-    <div><span class="metric-label">등록 에이전트</span><strong>{{ agent_total }}<small>대</small></strong><span class="metric-note">관리 대상 호스트</span></div>
+    <div><span class="metric-label">등록 에이전트</span><strong>{{ agent_total }}<small>대</small></strong><span class="metric-note">저장된 호스트 상태 분포</span></div>
     <span class="metric-icon"><svg class="icon" aria-hidden="true"><use href="#i-server"/></svg></span>
+    <div class="kpi-visual">
+      <div class="status-distribution" role="img" aria-label="정상 {{ agent_ok }}대, 주의 {{ agent_warn }}대, 중단 {{ agent_down }}대">
+        <span class="distribution-ok" style="flex-grow: {{ agent_ok }}"></span><span class="distribution-warn" style="flex-grow: {{ agent_warn }}"></span><span class="distribution-down" style="flex-grow: {{ agent_down }}"></span>
+      </div>
+      <div class="status-key"><span><i class="dot"></i>정상 {{ agent_ok }}</span><span><i class="dot warn"></i>주의 {{ agent_warn }}</span><span><i class="dot down"></i>중단 {{ agent_down }}</span></div>
+    </div>
   </article>
   <article>
-    <div><span class="metric-label">주의 이상</span><strong>{{ agent_warn }}<small>대</small></strong><span class="metric-note">상태 확인 필요</span></div>
+    <div><span class="metric-label">주의 에이전트</span><strong>{{ agent_warn }}<small>대</small></strong><span class="metric-note">주의 / 중단 상태 별도 집계</span></div>
     <span class="metric-icon amber"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg></span>
+    <div class="kpi-visual status-breakdown">
+      <div><span>주의</span><div class="breakdown-track"><span class="distribution-warn" style="width: {% if agent_total %}{% widthratio agent_warn agent_total 100 %}{% else %}0{% endif %}%"></span></div><b>{{ agent_warn }}</b></div>
+      <div><span>중단</span><div class="breakdown-track"><span class="distribution-down" style="width: {% if agent_total %}{% widthratio agent_down agent_total 100 %}{% else %}0{% endif %}%"></span></div><b>{{ agent_down }}</b></div>
+    </div>
   </article>
   <article>
-    <div><span class="metric-label">최근 알림</span><strong>{{ inspections|length }}<small>건</small></strong><span class="metric-note">최근 점검 결과</span></div>
-    <span class="metric-icon teal"><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg></span>
+    <div><span class="metric-label">최근 점검</span><strong>{{ inspections|length }}<small>건</small></strong><span class="metric-note">실제 저장된 최근 12건 이내</span></div>
+    <div class="inspection-ring{% if not inspections %} is-empty{% endif %}" style="--pass-share: {% if inspections %}{% widthratio inspection_passed inspections|length 100 %}{% else %}0{% endif %}%" role="img" aria-label="점검 통과 {{ inspection_passed }}건, 실패 {{ inspection_failed }}건"><span>통과<b>{{ inspection_passed }}</b></span></div>
+    <div class="kpi-visual inspection-key"><span>통과 <b>{{ inspection_passed }}</b></span><span>실패 <b>{{ inspection_failed }}</b></span></div>
   </article>
   <article>
-    <div><span class="metric-label">수집 구간</span><strong>12<small>시간</small></strong><span class="metric-note">이벤트 추이 조회 범위</span></div>
+    <div><span class="metric-label">예시 수집 구간</span><strong>12<small>시간</small></strong><span class="metric-note">실습 시뮬레이션 · 시간별 이벤트</span></div>
     <span class="metric-icon"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></span>
+    <div class="kpi-visual">
+      <div class="window-timeline" aria-hidden="true">{% for marker in alert_chart.series.0.markers %}<span{% if marker.label == alert_chart.peak_label %} class="is-peak"{% endif %}></span>{% endfor %}</div>
+      <p class="window-peak">최대 {{ alert_chart.peak_count }}건 <span>{{ alert_chart.peak_label }} · 예시 합산</span></p>
+    </div>
   </article>
 </section>
-<section class="card module">
-  <header><h2><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg>알림 추이</h2><span class="chart-legend">이벤트 추이</span></header>
+<section class="card module alert-module">
+  <header><h2><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg>알림 추이</h2><span class="simulation-tag">실습 시뮬레이션 · 최근 12시간</span></header>
   <div class="chart-body">
-    <svg class="event-chart" viewBox="0 0 720 140" preserveAspectRatio="none" role="img" aria-label="최근 12시간 알림 추이">
-      <path class="chart-grid" d="M0 10H720M0 40H720M0 70H720M0 100H720M0 130H720M0 0V140M180 0V140M360 0V140M540 0V140M720 0V140"/>
-      <polyline class="chart-line" points="{{ alert_points }}" fill="none"/>
-    </svg>
-    <p class="axis"><span>-12h</span><span>-9h</span><span>-6h</span><span>-3h</span><span>현재</span></p>
+    <div class="chart-summary">
+      <ul class="chart-legend" aria-label="심각도별 예시 이벤트 합계">
+        {% for series in alert_chart.series %}<li class="series-{{ series.key }}"><span class="legend-swatch" aria-hidden="true"></span>{{ series.label }} <b>{{ series.total }}건</b></li>{% endfor %}
+      </ul>
+      <p>예시 총 <b>{{ alert_chart.total }}건</b><span>최대 {{ alert_chart.peak_label }} · {{ alert_chart.peak_count }}건</span></p>
+    </div>
+    <p class="chart-description" id="alert-simulation-description">실제 점검 기록과 무관한 12시간 예시 데이터입니다. 각 점에 마우스를 올리면 시간별 건수를 확인할 수 있습니다.</p>
+    <div class="chart-plot">
+      <div class="chart-y-axis" aria-hidden="true">{% for tick in alert_chart.ticks %}<span style="top: {% widthratio tick.y 160 100 %}%">{{ tick.value }}</span>{% endfor %}</div>
+      <svg class="event-chart" viewBox="0 0 720 160" preserveAspectRatio="none" role="img" aria-labelledby="alert-chart-title" aria-describedby="alert-simulation-description">
+        <title id="alert-chart-title">실습 시뮬레이션: 최근 12시간 심각도별 알림 건수</title>
+        {% for tick in alert_chart.ticks %}<path class="chart-grid" d="M15 {{ tick.y }}H705"/>{% endfor %}
+        {% for series in alert_chart.series %}<polyline class="chart-line series-{{ series.key }}" points="{{ series.points }}" fill="none"/>{% endfor %}
+        {% for series in alert_chart.series %}{% for marker in series.markers %}<circle class="chart-point series-{{ series.key }}" cx="{{ marker.x }}" cy="{{ marker.y }}" r="3.5"><title>{{ marker.label }} · {{ series.label }} · {{ marker.value }}건</title></circle>{% endfor %}{% endfor %}
+      </svg>
+      <span class="chart-axis-unit">건</span>
+      <div class="axis" aria-hidden="true">{% for marker in alert_chart.series.0.markers %}<span>{{ marker.label }}</span>{% endfor %}</div>
+    </div>
+    <table class="sr-only">
+      <caption>실습 시뮬레이션 · 최근 12시간 예시 알림, 실제 점검 기록 아님</caption>
+      <thead><tr><th scope="col">시간</th><th scope="col">심각도</th><th scope="col">예시 건수</th></tr></thead>
+      <tbody>{% for series in alert_chart.series %}{% for marker in series.markers %}<tr><td>{{ marker.label }}</td><td>{{ series.label }}</td><td>{{ marker.value }}</td></tr>{% endfor %}{% endfor %}</tbody>
+    </table>
   </div>
 </section>
 <div class="module-grid">
   <section class="card module">
     <header><h2><svg class="icon" aria-hidden="true"><use href="#i-server"/></svg>에이전트 현황</h2><span class="panel-meta">{{ agent_total }} hosts</span></header>
     <div class="table-scroll">
-      <table class="data">
+      <table class="data dashboard-table">
         <thead><tr><th scope="col">호스트 / 주소</th><th scope="col">상태</th><th scope="col">CPU</th><th scope="col">메모리</th></tr></thead>
         <tbody>
           {% for server in servers %}
-            <tr>
+            <tr data-server-id="{{ server.pk }}" data-simulated="{% if server.seed_metrics %}true{% else %}false{% endif %}">
               <td><span class="host-name"><span class="dot {{ server.status }}"></span>{{ server.hostname }}</span><small>{{ server.address }}</small></td>
               <td><span class="status-label {{ server.status }}">{{ server.get_status_display }}</span></td>
-              <td><div class="meter"><span style="width: {{ server.cpu_percent }}%"></span></div><span class="resource-value">{{ server.cpu_percent }}%</span></td>
-              <td><div class="meter memory-meter"><span style="width: {{ server.memory_percent }}%"></span></div><span class="resource-value">{{ server.memory_percent }}%</span></td>
+              <td><div class="meter" role="progressbar" aria-label="{{ server.hostname }} CPU" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ server.cpu_percent }}"><span data-metric-bar="cpu" style="width: {{ server.cpu_percent }}%"></span></div><span class="resource-value" data-metric-value="cpu">{{ server.cpu_percent }}%</span></td>
+              <td><div class="meter memory-meter" role="progressbar" aria-label="{{ server.hostname }} 메모리" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ server.memory_percent }}"><span data-metric-bar="memory" style="width: {{ server.memory_percent }}%"></span></div><span class="resource-value" data-metric-value="memory">{{ server.memory_percent }}%</span></td>
             </tr>
           {% empty %}
             <tr><td colspan="4">등록된 에이전트가 없습니다.</td></tr>
@@ -58,12 +92,12 @@
         </tbody>
       </table>
     </div>
-    <footer class="panel-footer"><span>호스트별 자원 사용 현황</span><a href="{% url 'diagnostics' %}">호스트 진단 →</a></footer>
+    <footer class="panel-footer metrics-footer"><div><span id="metrics-state" role="status">{% if seed_metrics %}실습 시뮬레이션 · 3초 갱신{% else %}저장된 측정값{% endif %}</span><time id="metrics-updated"></time><noscript><span>JavaScript 비활성: 최초 표시값 유지</span></noscript></div><a href="{% url 'diagnostics' %}">호스트 진단 →</a></footer>
   </section>
   <section class="card module">
-    <header><h2><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>최근 알림</h2><span class="panel-meta">최근 {{ inspections|length }}건</span></header>
+    <header><h2><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>최근 점검 기록</h2><span class="panel-meta">실제 저장된 {{ inspections|length }}건</span></header>
     <div class="table-scroll">
-      <table class="data">
+      <table class="data dashboard-table">
         <thead><tr><th scope="col">발생 시각</th><th scope="col">레벨</th><th scope="col">점검 내용</th></tr></thead>
         <tbody>
           {% for row in inspections %}
@@ -73,7 +107,7 @@
               <td>{{ row.server.hostname }}<small>{{ row.summary }}</small></td>
             </tr>
           {% empty %}
-            <tr><td colspan="3">알림이 없습니다.</td></tr>
+            <tr><td colspan="3">점검 기록이 없습니다.</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -81,3 +115,4 @@
   </section>
 </div>
 {% endblock %}
+{% block scripts %}<script src="{% static 'opswatch/dashboard.js' %}?v=20261116" defer></script>{% endblock %}
