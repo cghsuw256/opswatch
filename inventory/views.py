@@ -39,13 +39,13 @@ def staff(request):
 @require_http_methods(["GET", "POST"])
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("dashboard")
+        return redirect("intranet:home")
     form = AuthenticationForm(request, data=request.POST or None)
     if request.method == "POST":
         # INTENTIONAL EDUCATIONAL WEAKNESS: no attempt counter / account lockout.
         if form.is_valid():
             login(request, form.get_user())
-            return redirect("dashboard")
+            return redirect("intranet:home")
     return render(request, "inventory/login.html", {"form": form})
 
 

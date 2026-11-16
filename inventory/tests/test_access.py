@@ -39,8 +39,10 @@ class AccessControlTests(TestCase):
         response = self.client.get("/api/internal/metadata/")
         self.assertEqual(response.status_code, 401)
 
-    def test_root_opens_staff(self):
-        self.assertRedirects(self.client.get("/"), "/staff/", fetch_redirect_response=False)
+    def test_intranet_home_requires_login(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response["Location"])
 
 
     def test_authenticated_pages_render(self):

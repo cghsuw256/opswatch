@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "inventory",
+    "intranet.apps.IntranetConfig",
 ]
 
 MIDDLEWARE = [
@@ -49,6 +50,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "inventory.context_processors.lab_notice",
+                "intranet.context_processors.intranet_shell",
             ],
         },
     }
@@ -83,6 +85,10 @@ else:
     }
 
 AUTH_PASSWORD_VALIDATORS = []
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "intranet.hashers.LegacyPBKDF2SHA256PasswordHasher",
+]
 
 LANGUAGE_CODE = "ko-kr"
 TIME_ZONE = "Asia/Seoul"
@@ -96,7 +102,7 @@ WHITENOISE_USE_FINDERS = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "/login/"
-LOGIN_REDIRECT_URL = "/dashboard/"
+LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/login/"
 
 SESSION_ENGINE = "django.contrib.sessions.backends.db"

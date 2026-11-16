@@ -6,7 +6,7 @@
 - 공개 포트: `127.0.0.1:8000` 만 바인딩
 - 계정·토큰·FLAG: 전부 실습용 가짜 값
 - 셸 진단: **격리된 실습 컨테이너 안에서만** 실제 실행
-- 화면 구성: 기존 당직 연락망·로그인·내부 토큰·호스트 진단·상황실 에이전트 유지
+- 화면 구성: 로그인 후 부대 인트라넷 홈, 공지사항·게시판·결재·일정·부대원·내 정보. 기존 OpsWatch 화면은 **운영 관리** 탭에서 접근
 
 학습자는 가능하면 이 README의 계정 표를 보지 말고 `/staff/`부터 시작해도 됩니다.
 
@@ -30,6 +30,8 @@
 | URLconf | `opswatch/urls.py`, `inventory/urls.py` | 페이지·API 경로 |
 | Service | `inventory/services/diagnostics.py` | 컨테이너 전용 실제 셸 실행과 호스트 보고서 |
 | Management | `inventory/management/commands/seed_lab.py` | 멱등 시드 |
+| Intranet | `intranet/` | 부대 업무 모델·폼·뷰·공통 디자인 템플릿 |
+| Import | `intranet/management/commands/import_intranet.py` | 원본 SQLite 데이터의 멱등 이관 |
 
 Django 관리자 사이트는 연결하지 않습니다. `/admin/diagnostics/`는 실습용 진단 화면입니다.
 
@@ -57,9 +59,28 @@ cd C:\Users\USER\Documents\opswatch
 docker compose up --build
 ```
 
-브라우저: [http://127.0.0.1:8000/staff/](http://127.0.0.1:8000/staff/)
+브라우저: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
-MySQL이 healthy가 된 뒤 엔트리포인트가 `migrate`와 `seed_lab`을 실행합니다.
+MySQL이 healthy가 된 뒤 엔트리포인트가 `migrate`, `seed_lab`, `import_intranet`을 실행합니다. 로그인 후 `/`의 인트라넷 홈으로 이동합니다. 공개 당직 연락망은 `/staff/`에서 계속 이용할 수 있습니다.
+
+### 통합 화면과 기존 데이터
+
+- **인트라넷**: 홈, 공지사항, 게시판(검색·분류·댓글), 결재(받은 문서·내 기안), 일정(공통·개인), 부대원, 내 정보·비밀번호 변경.
+- **운영 관리**: 기존 운영 개요(`/dashboard/`), 당직 연락망, 내부 토큰, 호스트 진단, 상황실 에이전트. 인트라넷과 같은 Django 로그인 세션·메뉴·색상·컴포넌트를 사용합니다.
+- `파이선/app.py`의 기능을 Django `intranet` 앱으로 옮겼습니다. 별도 Python 서버나 iframe은 사용하지 않습니다. 원본 소스와 `파이선/intranet.db`는 보존하고, 통합 후 변경 사항은 Django DB에 저장합니다.
+- 최초 이관 대상: 원본 계정 12개, 공지 5개, 게시글 12개, 댓글 7개, 결재 7개, 일정 8개. 원본 DB의 `정보공유` 분류와 `지출결의`·`품의` 문서 종류도 그대로 지원합니다.
+- 이관을 다시 실행해도 통합 후 수정한 내용·비밀번호를 덮어쓰거나 삭제한 문서를 복원하지 않습니다. 기존 Django 계정과 ID가 같으면 기존 계정과 프로필을 유지합니다. 원본 로그인 세션은 가져오지 않으며, 원본 계정의 비밀번호 해시는 최초 정상 인증 시 Django 형식으로 자동 갱신됩니다.
+- 인트라넷 관리자는 공지 작성·삭제와 공통 일정 등록이 가능합니다. 일반 사용자는 본인 게시글·일정만 삭제하고, 결재는 기안자·지정 결재자·인트라넷 관리자만 열람합니다. 승인·반려는 지정 결재자만 한 번 처리할 수 있습니다. 인트라넷 관리자 역할은 Django 관리자 권한을 부여하지 않습니다.
+- `파이선/military_intranet_lab/`는 별도의 이전 실습 자료로 보존합니다. 해당 서버를 함께 실행할 필요는 없습니다.
+
+원본 데이터를 수동 이관하려면:
+
+```powershell
+.\.venv\Scripts\python manage.py import_intranet
+# 다른 원본 파일을 명시하려면: --source "경로\intranet.db"
+```
+
+이관 ID 매핑은 한 원본 DB 기준입니다. 다른 ID 체계의 DB를 같은 대상 DB에 추가 병합하는 용도로 사용하지 마세요.
 
 ### 운영 개요의 실습 데이터
 
@@ -78,6 +99,7 @@ python -m venv .venv
 $env:OPSWATCH_DATABASE = "sqlite"
 .\.venv\Scripts\python manage.py migrate
 .\.venv\Scripts\python manage.py seed_lab
+.\.venv\Scripts\python manage.py import_intranet
 .\.venv\Scripts\python manage.py runserver 127.0.0.1:8000
 ```
 
@@ -93,6 +115,8 @@ $env:OPSWATCH_DATABASE = "sqlite"
 | 최하린 | 상황실 | `harin` | `harin123` |
 
 모두 같은 접근 권한의 일반 실습 계정이며 관리자(`is_staff`, `is_superuser`) 권한은 없습니다. 비밀번호는 의도적으로 약하며 DB에는 Django 해시로 저장합니다. `seed_lab` 재실행 시 위 계정을 생성·갱신하고 비밀번호를 위 값으로 초기화합니다. 당직 연락망에는 로그인 ID만 표시합니다.
+
+원본 인트라넷 계정도 같은 로그인 화면을 사용합니다. 현재 원본 데이터의 관리자는 `admin` / `admin1234`, 일반 계정 예시는 `jykim` / `nova1234`입니다. `admin`은 부대 업무 관리용 역할이며 Django 관리자 권한은 없습니다. 이관 후 변경한 비밀번호는 `import_intranet` 재실행으로 초기화되지 않습니다.
 
 - 취약 내부 토큰: 기존 **내부 토큰** 화면의 **에이전트 상태 조회**가 호출하는 `GET /api/internal/metadata/` 응답 JSON에 평문 포함. 화면에는 서비스명과 상태만 표시
 - 상태 조회 후 현재 세션의 진단·에이전트 화면이 활성화됩니다. 로그아웃하면 다시 조회해야 하지만, 유출된 고정 토큰은 API에서 세션 없이 재사용 가능

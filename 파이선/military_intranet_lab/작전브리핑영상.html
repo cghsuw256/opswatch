@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SENTINEL 침투 작전 — 시큐어코딩 브리핑</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:#05070d;
+    font-family:"맑은 고딕","Malgun Gothic","Segoe UI",sans-serif;
+    color:#dbe6f2; display:flex; align-items:center; justify-content:center;
+    min-height:100%; padding:16px;
+  }
+  .player{ width:min(100%,960px); }
+
+  /* 화면(스테이지) */
+  .stage{
+    position:relative; width:100%; aspect-ratio:16/9;
+    background:#070b14; border:1px solid #1b2f4a; border-radius:10px;
+    overflow:hidden; box-shadow:0 20px 60px #000a;
+  }
+  /* 공격/방어 톤 오버레이 */
+  .stage::after{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(120% 80% at 50% 0%, #ff2a2a14, transparent 60%);
+    transition:background .6s; z-index:5;
+  }
+  .stage[data-tone="defense"]::after{
+    background:radial-gradient(120% 80% at 50% 0%, #19d06b1f, transparent 60%);
+  }
+  .stage[data-tone="neutral"]::after{
+    background:radial-gradient(120% 80% at 50% 0%, #3a7fcf1a, transparent 60%);
+  }
+
+  /* 상단 등급바 */
+  .clsf{position:absolute;top:0;left:0;right:0;z-index:8;
+    background:#7a1f1f;color:#ffdede;text-align:center;font-size:10px;
+    letter-spacing:3px;padding:3px;font-weight:bold;}
+  .stage[data-tone="defense"] .clsf{background:#1c5e39;color:#d6ffe6;}
+
+  /* HUD */
+  .hud{position:absolute;top:22px;left:16px;right:16px;z-index:8;
+    display:flex;justify-content:space-between;font-size:11px;color:#6d87a3;
+    letter-spacing:1px;}
+  .hud .ph{color:#e08a85;font-weight:bold;}
+  .stage[data-tone="defense"] .hud .ph{color:#6cd79a;}
+
+  .inner{position:absolute;inset:0;padding:54px 48px 40px;z-index:6;
+    display:flex;flex-direction:column;justify-content:center;}
+
+  /* 애니메이션 유틸 */
+  .rise{opacity:0;transform:translateY(10px);animation:rise .5s ease forwards;}
+  @keyframes rise{to{opacity:1;transform:none;}}
+  .pop{opacity:0;transform:scale(.9);animation:pop .5s cubic-bezier(.2,1.4,.4,1) forwards;}
+  @keyframes pop{to{opacity:1;transform:none;}}
+  .type{display:inline-block;overflow:hidden;white-space:nowrap;
+    border-right:2px solid #6cf;width:0;
+    animation:typing 1s steps(28) forwards, caret .7s step-end infinite;}
+  @keyframes typing{to{width:100%;}}
+  @keyframes caret{50%{border-color:transparent;}}
+  .glitch{animation:glitch .35s steps(2) 3;}
+  @keyframes glitch{0%{transform:translate(0)}25%{transform:translate(-2px,1px)}
+    50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-1px)}100%{transform:none}}
+  .flash{animation:flash .6s ease;}
+  @keyframes flash{0%{background:#ffffff22}100%{background:transparent}}
+
+  /* 타이틀 */
+  .title{font-size:40px;font-weight:900;letter-spacing:4px;color:#eaf1f8;
+    text-align:center;text-shadow:0 0 18px #3a7fcf66;}
+  .title .red{color:#ff5a52;}
+  .subt{text-align:center;color:#8aa3bf;font-size:15px;margin-top:14px;letter-spacing:2px;}
+  .crest{width:66px;height:72px;margin:0 auto 10px;display:block;}
+
+  /* 브리핑 리스트 */
+  .brief h3{font-size:20px;color:#eaf1f8;margin-bottom:18px;letter-spacing:1px;}
+  .chain{display:flex;gap:10px;flex-wrap:wrap;}
+  .chain .step{flex:1;min-width:120px;background:#0d1d31;border:1px solid #1f3b5c;
+    border-radius:8px;padding:14px;}
+  .chain .num{font-size:12px;color:#c9a24b;font-weight:bold;letter-spacing:1px;}
+  .chain .nm{font-size:14px;color:#dbe6f2;margin-top:6px;font-weight:bold;}
+  .chain .cwe{font-size:11px;color:#6d87a3;margin-top:4px;font-family:Consolas,monospace;}
+  .chain .arrow{align-self:center;color:#44618a;font-size:20px;}
+
+  /* 페이즈 배너 */
+  .banner{text-align:center;}
+  .banner .pn{font-size:16px;color:#c9a24b;letter-spacing:6px;font-weight:bold;}
+  .banner .pt{font-size:34px;color:#eaf1f8;font-weight:900;margin-top:10px;letter-spacing:2px;}
+  .banner .pd{font-size:14px;color:#8aa3bf;margin-top:12px;}
+  .banner .line{width:0;height:2px;background:#ff5a52;margin:18px auto 0;
+    animation:grow 1s ease forwards;}
+  .stage[data-tone="defense"] .banner .line{background:#19d06b;}
+  @keyframes grow{to{width:220px;}}
+
+  /* 터미널 */
+  .term{background:#04070d;border:1px solid #16304b;border-radius:8px;
+    font-family:Consolas,"D2Coding",monospace;font-size:14px;overflow:hidden;}
+  .term .tbar{background:#0d1d31;padding:7px 12px;font-size:11px;color:#6d87a3;
+    border-bottom:1px solid #16304b;display:flex;gap:6px;align-items:center;}
+  .term .dot{width:9px;height:9px;border-radius:50%;background:#44617f;}
+  .term .body{padding:14px 16px;line-height:1.75;min-height:150px;}
+  .term .l{white-space:pre-wrap;word-break:break-all;}
+  .muted{color:#5f7e9c;} .cmd{color:#eaf1f8;} .ok{color:#5fe39a;} .bad{color:#ff6b63;}
+  .warn{color:#e8b572;} .key{color:#e8c98a;}
+
+  .lesson{background:#0b2a1a;border:1px solid #1f6b43;border-radius:10px;
+    padding:20px 22px;}
+  .lesson .lh{font-size:13px;color:#6cd79a;letter-spacing:2px;font-weight:bold;}
+  .lesson .lt{font-size:19px;color:#eafff2;margin:8px 0 12px;font-weight:bold;}
+  .lesson ul{list-style:none;} .lesson li{font-size:13.5px;color:#bfe9cf;
+    padding:4px 0 4px 20px;position:relative;}
+  .lesson li::before{content:"✓";position:absolute;left:0;color:#5fe39a;font-weight:bold;}
+
+  .outro{text-align:center;}
+  .outro .big{font-size:26px;color:#eaf1f8;font-weight:900;line-height:1.5;}
+  .outro .sm{font-size:15px;color:#8aa3bf;margin-top:16px;}
+  .defgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px;text-align:left;}
+  .defgrid div{background:#0d1d31;border:1px solid #1f3b5c;border-radius:7px;
+    padding:11px 13px;font-size:12.5px;color:#cfe0f2;}
+  .defgrid b{color:#6cd79a;}
+
+  /* 컨트롤 */
+  .bar{margin-top:12px;display:flex;align-items:center;gap:12px;}
+  .prog{flex:1;height:5px;background:#12243a;border-radius:3px;overflow:hidden;}
+  .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3a7fcf,#6cd79a);}
+  .ctrl{display:flex;gap:6px;}
+  button{background:#12294a;color:#cfe0f2;border:1px solid #27476b;border-radius:6px;
+    padding:8px 13px;font-size:13px;cursor:pointer;font-family:inherit;}
+  button:hover{background:#1b3a63;}
+  button.main{background:#2d6cb5;border-color:#2d6cb5;color:#fff;font-weight:bold;min-width:84px;}
+  .scenelabel{font-size:12px;color:#6d87a3;min-width:120px;}
+  .hint{text-align:center;font-size:11px;color:#45617f;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="player">
+  <div class="stage" id="stage" data-tone="neutral">
+    <div class="clsf">대외비 · 보안교육용 시뮬레이션 · 실제 시스템 아님</div>
+    <div class="hud"><span class="ph" id="hudPhase">작전 브리핑</span><span id="hudCount">00 / 00</span></div>
+    <div class="inner" id="inner"></div>
+  </div>
+
+  <div class="bar">
+    <div class="prog"><i id="progBar"></i></div>
+    <span class="scenelabel" id="sceneLabel"></span>
+    <div class="ctrl">
+      <button id="btnPrev">‹ 이전</button>
+      <button class="main" id="btnPlay">⏸ 일시정지</button>
+      <button id="btnNext">다음 ›</button>
+      <button id="btnRestart">↻ 처음부터</button>
+    </div>
+  </div>
+  <div class="hint">화면 클릭 또는 ← → 방향키로 이동 · 스페이스바로 재생/정지</div>
+</div>
+
+<script>
+const S = [
+  { phase:"작전 브리핑", tone:"neutral", label:"오프닝", dur:5200, html:`
+    <div class="banner">
+      <svg class="crest pop" viewBox="0 0 66 72" xmlns="http://www.w3.org/2000/svg">
+        <path d="M33 2 L62 11 V34 C62 53 50 65 33 70 C16 65 4 53 4 34 V11 Z"
+          fill="#0d2238" stroke="#c9a24b" stroke-width="2"/>
+        <path d="M33 14 L33 58 M17 23 L49 23" stroke="#c9a24b" stroke-width="2.4" fill="none"/>
+        <circle cx="33" cy="37" r="8" fill="none" stroke="#7fb2e6" stroke-width="2"/>
+      </svg>
+      <div class="title glitch">SENTINEL <span class="red">침투 작전</span></div>
+      <div class="subt rise" style="animation-delay:.5s">적 전술사령부 내부망 침투 시뮬레이션 · 시큐어코딩 교육</div>
+      <div class="line"></div>
+    </div>`},
+
+  { phase:"작전 브리핑", tone:"neutral", label:"작전 개요", dur:7000, html:`
+    <div class="brief">
+      <h3 class="rise">🎯 작전 개요 — 약한 고리 하나가 전체를 무너뜨린다</h3>
+      <div class="chain">
+        <div class="step rise" style="animation-delay:.2s"><div class="num">PHASE 1</div><div class="nm">초기 침투</div><div class="cwe">로그인 돌파</div></div>
+        <div class="arrow rise" style="animation-delay:.4s">→</div>
+        <div class="step rise" style="animation-delay:.6s"><div class="num">PHASE 2</div><div class="nm">정보 탈취</div><div class="cwe">비밀값 수집</div></div>
+        <div class="arrow rise" style="animation-delay:.8s">→</div>
+        <div class="step rise" style="animation-delay:1s"><div class="num">PHASE 3</div><div class="nm">시스템 장악</div><div class="cwe">명령 실행</div></div>
+        <div class="arrow rise" style="animation-delay:1.2s">→</div>
+        <div class="step rise" style="animation-delay:1.4s"><div class="num">PHASE 4</div><div class="nm">지속 접근</div><div class="cwe">백도어</div></div>
+      </div>
+      <div class="subt rise" style="animation-delay:1.8s;margin-top:22px">실제 해킹은 취약점 하나가 아니라, 이 연쇄로 이뤄집니다.</div>
+    </div>`},
+
+  // PHASE 1
+  { phase:"PHASE 1", tone:"attack", label:"P1 · 초기 침투", dur:4200, html:`
+    <div class="banner">
+      <div class="pn pop">PHASE 1</div>
+      <div class="pt rise" style="animation-delay:.3s">초기 침투</div>
+      <div class="pd rise" style="animation-delay:.6s">노출된 로그인 포털 — 실패해도 잠기지 않는다 <span class="muted">(CWE-307)</span></div>
+      <div class="line"></div>
+    </div>`},
+
+  { phase:"PHASE 1", tone:"attack", label:"P1 · 무차별 대입", dur:8000, html:`
+    <div class="term">
+      <div class="tbar"><span class="dot"></span>SENTINEL 인증포털 — 자동 대입 공격</div>
+      <div class="body">
+        <div class="l rise" style="animation-delay:.1s"><span class="muted">[*] 대상 계정:</span> <span class="key">admin</span> · 시도 제한 없음 확인</div>
+        <div class="l rise" style="animation-delay:.6s">admin : 0000 → <span class="bad">실패</span></div>
+        <div class="l rise" style="animation-delay:.9s">admin : 1234 → <span class="bad">실패</span></div>
+        <div class="l rise" style="animation-delay:1.2s">admin : password → <span class="bad">실패</span></div>
+        <div class="l rise" style="animation-delay:1.5s">admin : qwerty → <span class="bad">실패</span></div>
+        <div class="l rise" style="animation-delay:1.8s">admin : admin123 → <span class="bad">실패</span></div>
+        <div class="l rise" style="animation-delay:2.1s"><span class="muted">... 초당 수천 건 자동 대입 ...</span></div>
+        <div class="l rise flash" style="animation-delay:3s">admin : Soldier!2024 → <span class="ok">★ ACCESS GRANTED ★</span></div>
+        <div class="l rise" style="animation-delay:3.6s"><span class="ok">[+] 관리자 세션 획득 — 내부망 진입 성공</span></div>
+      </div>
+    </div>`},
+
+  { phase:"PHASE 1", tone:"defense", label:"P1 · 방어", dur:7000, html:`
+    <div class="lesson pop">
+      <div class="lh">🛡 DEFENSE — 반복 인증시도 제한</div>
+      <div class="lt">실패에는 반드시 '대가'를 물려라</div>
+      <ul>
+        <li class="rise" style="animation-delay:.3s">로그인 실패 횟수 임계치 설정 → 초과 시 계정·IP 잠금</li>
+        <li class="rise" style="animation-delay:.6s">지연(backoff) · CAPTCHA로 자동화 차단</li>
+        <li class="rise" style="animation-delay:.9s">이상 로그인 탐지·알림, 그리고 MFA(다중인증)</li>
+      </ul>
+      <div class="subt rise" style="animation-delay:1.2s;text-align:left;margin-top:12px">→ 안전 버전에서는 5회 실패 시 30초 잠금으로 대입이 무력화됩니다.</div>
+    </div>`},
+
+  // PHASE 2
+  { phase:"PHASE 2", tone:"attack", label:"P2 · 정보 탈취", dur:4200, html:`
+    <div class="banner">
+      <div class="pn pop">PHASE 2</div>
+      <div class="pt rise" style="animation-delay:.3s">정보 탈취</div>
+      <div class="pd rise" style="animation-delay:.6s">소스에 박아둔 비밀번호·토큰을 수확한다 <span class="muted">(CWE-798/259)</span></div>
+      <div class="line"></div>
+    </div>`},
+
+  { phase:"PHASE 2", tone:"attack", label:"P2 · 비밀값 덤프", dur:8200, html:`
+    <div class="term">
+      <div class="tbar"><span class="dot"></span>시스템 환경설정 — 연동 서버 정보</div>
+      <div class="body">
+        <div class="l"><span class="muted">$</span> <span class="type">cat config / 환경설정 조회</span></div>
+        <div class="l rise" style="animation-delay:1.1s">DB_PASSWORD = <span class="bad">"admin1234!"</span></div>
+        <div class="l rise" style="animation-delay:1.5s">API_TOKEN&nbsp;&nbsp; = <span class="bad">"AKIA-DEMO-0000-1111-2222"</span></div>
+        <div class="l rise" style="animation-delay:1.9s">SECRET_KEY&nbsp; = <span class="bad">"mil_intra_2024_secret_key"</span></div>
+        <div class="l rise" style="animation-delay:2.5s"><span class="warn">[!] 로그인 없이, 소스 유출만으로도 이 값이 전부 노출됩니다.</span></div>
+        <div class="l rise" style="animation-delay:3.2s"><span class="ok">[+] DB 접속정보 · 외부 API 토큰 확보</span></div>
+      </div>
+    </div>`},
+
+  { phase:"PHASE 2", tone:"defense", label:"P2 · 방어", dur:7000, html:`
+    <div class="lesson pop">
+      <div class="lh">🛡 DEFENSE — 하드코드된 중요정보 제거</div>
+      <div class="lt">비밀은 코드가 아니라 '밖'에 둬라</div>
+      <ul>
+        <li class="rise" style="animation-delay:.3s">비밀값은 환경변수 · Vault/KMS · .env로 분리</li>
+        <li class="rise" style="animation-delay:.6s">소스·깃에 절대 커밋 금지 (.gitignore)</li>
+        <li class="rise" style="animation-delay:.9s">비밀번호는 평문 아닌 해시(+Salt) 저장, 노출 키는 즉시 폐기·재발급</li>
+      </ul>
+      <div class="subt rise" style="animation-delay:1.2s;text-align:left;margin-top:12px">→ 안전 버전에서는 값이 마스킹되어 <span class="key">ad********</span> 로만 보입니다.</div>
+    </div>`},
+
+  // PHASE 3
+  { phase:"PHASE 3", tone:"attack", label:"P3 · 시스템 장악", dur:4200, html:`
+    <div class="banner">
+      <div class="pn pop">PHASE 3</div>
+      <div class="pt rise" style="animation-delay:.3s">시스템 장악</div>
+      <div class="pd rise" style="animation-delay:.6s">'네트워크 진단' 기능에 명령을 끼워 넣는다 <span class="muted">(CWE-78)</span></div>
+      <div class="line"></div>
+    </div>`},
+
+  { phase:"PHASE 3", tone:"attack", label:"P3 · 명령어 삽입", dur:9000, html:`
+    <div class="term">
+      <div class="tbar"><span class="dot"></span>네트워크 진단 — ping 점검</div>
+      <div class="body">
+        <div class="l"><span class="muted">점검대상 &gt;</span> <span class="type" style="animation-duration:1.6s">127.0.0.1 &amp; whoami</span></div>
+        <div class="l rise" style="animation-delay:2s"><span class="muted">Reply from 127.0.0.1: bytes=32 time&lt;1ms</span></div>
+        <div class="l rise" style="animation-delay:2.5s"><span class="bad">garuda\\administrator</span>  ← <span class="warn">서버 계정이 그대로 노출</span></div>
+        <div class="l rise" style="animation-delay:3.4s"><span class="muted">점검대상 &gt;</span> 127.0.0.1 &amp; ipconfig</div>
+        <div class="l rise" style="animation-delay:4s"><span class="bad">IPv4 Address . . : 10.20.33.14</span></div>
+        <div class="l rise" style="animation-delay:4.5s"><span class="bad">Default Gateway  : 10.20.33.1</span></div>
+        <div class="l rise" style="animation-delay:5.3s"><span class="warn">[!] ping 기능이 서버 장악 통로가 되었습니다 → 다음 단계는 악성코드 설치</span></div>
+      </div>
+    </div>`},
+
+  { phase:"PHASE 3", tone:"defense", label:"P3 · 방어", dur:7000, html:`
+    <div class="lesson pop">
+      <div class="lh">🛡 DEFENSE — OS 명령어 삽입 차단</div>
+      <div class="lt">사용자 입력을 '명령'으로 쓰지 마라</div>
+      <ul>
+        <li class="rise" style="animation-delay:.3s">외부 입력 기반 OS 명령 실행 자체를 회피</li>
+        <li class="rise" style="animation-delay:.6s">불가피하면 shell=False + 인자를 리스트로 전달 (셸 해석 제거)</li>
+        <li class="rise" style="animation-delay:.9s">입력값 화이트리스트 검증 · 최소 권한 실행</li>
+      </ul>
+      <div class="subt rise" style="animation-delay:1.2s;text-align:left;margin-top:12px">→ 안전 버전에서는 <span class="key">127.0.0.1 &amp; whoami</span> 입력이 "차단"됩니다.</div>
+    </div>`},
+
+  // PHASE 4
+  { phase:"PHASE 4", tone:"attack", label:"P4 · 지속 접근", dur:4200, html:`
+    <div class="banner">
+      <div class="pn pop">PHASE 4</div>
+      <div class="pt rise" style="animation-delay:.3s">지속 접근 확보</div>
+      <div class="pd rise" style="animation-delay:.6s">약한 비밀번호로 몰래 백도어 계정을 심는다 <span class="muted">(CWE-521)</span></div>
+      <div class="line"></div>
+    </div>`},
+
+  { phase:"PHASE 4", tone:"attack", label:"P4 · 백도어", dur:7800, html:`
+    <div class="term">
+      <div class="tbar"><span class="dot"></span>대원 계정등록 — 신규 계정 발급</div>
+      <div class="body">
+        <div class="l rise" style="animation-delay:.1s">아이디&nbsp;&nbsp;&nbsp;: <span class="key">24-00000001</span></div>
+        <div class="l rise" style="animation-delay:.5s">비밀번호 : <span class="bad">1234</span>  <span class="muted">(복잡도 검증 없음)</span></div>
+        <div class="l rise" style="animation-delay:1.3s"><span class="muted">[*] 계정 발급 요청 ...</span></div>
+        <div class="l rise flash" style="animation-delay:2.1s"><span class="ok">[+] 발급 완료 — '1234' 비밀번호가 그대로 통과</span></div>
+        <div class="l rise" style="animation-delay:2.8s"><span class="warn">[!] 백도어 계정 확보 — 작전이 끝나도 언제든 재침투 가능</span></div>
+      </div>
+    </div>`},
+
+  { phase:"PHASE 4", tone:"defense", label:"P4 · 방어", dur:7000, html:`
+    <div class="lesson pop">
+      <div class="lh">🛡 DEFENSE — 취약한 비밀번호 차단</div>
+      <div class="lt">약한 비밀번호는 '입구'에서 막아라</div>
+      <ul>
+        <li class="rise" style="animation-delay:.3s">최소 길이·문자조합 강제 (9자+ 대/소/숫자/특수)</li>
+        <li class="rise" style="animation-delay:.6s">흔한 비밀번호·사전 단어 차단</li>
+        <li class="rise" style="animation-delay:.9s">bcrypt/Argon2 해시 저장 · 필요 시 MFA 병행</li>
+      </ul>
+      <div class="subt rise" style="animation-delay:1.2s;text-align:left;margin-top:12px">→ 안전 버전에서는 <span class="key">1234</span> 가입이 "거부"됩니다.</div>
+    </div>`},
+
+  // 반전 + 마무리
+  { phase:"작전 종료", tone:"defense", label:"반전 · 핵심", dur:9000, html:`
+    <div class="outro">
+      <div class="big rise">적 시스템을 뚫은 그 4개의 약점은<br><span style="color:#ff8a84">사실 우리가 매일 짜는 코드의 문제</span>입니다.</div>
+      <div class="defgrid">
+        <div class="rise" style="animation-delay:.4s"><b>① 인증 제한</b> — 실패 잠금·MFA</div>
+        <div class="rise" style="animation-delay:.6s"><b>② 비밀값 분리</b> — 환경변수·해시</div>
+        <div class="rise" style="animation-delay:.8s"><b>③ 명령 삽입 차단</b> — shell=False·검증</div>
+        <div class="rise" style="animation-delay:1s"><b>④ 비밀번호 정책</b> — 복잡도·사전 차단</div>
+      </div>
+      <div class="sm rise" style="animation-delay:1.4s">공격자는 가장 약한 고리 하나를 찾는다. 시큐어코딩은 그 고리를 없애는 일.</div>
+    </div>`},
+
+  { phase:"작전 종료", tone:"neutral", label:"엔딩", dur:6000, html:`
+    <div class="banner">
+      <div class="title pop" style="font-size:30px">작전 종료 — <span class="red">SECURE CODING</span></div>
+      <div class="subt rise" style="animation-delay:.5s">SENTINEL 통합전장정보체계 · 보안약점 4종 실습</div>
+      <div class="line"></div>
+      <div class="subt rise" style="animation-delay:1s;margin-top:16px;color:#6d87a3">장진용 · 영남대학교 사이버보안학과</div>
+    </div>`},
+];
+
+const stage=document.getElementById('stage');
+const inner=document.getElementById('inner');
+const progBar=document.getElementById('progBar');
+const hudPhase=document.getElementById('hudPhase');
+const hudCount=document.getElementById('hudCount');
+const sceneLabel=document.getElementById('sceneLabel');
+const btnPlay=document.getElementById('btnPlay');
+
+let i=0, playing=true, raf=null, sceneStart=0, elapsedBefore=0, dur=0;
+
+function render(){
+  const s=S[i];
+  inner.innerHTML=s.html;
+  stage.setAttribute('data-tone', s.tone);
+  hudPhase.textContent=s.phase;
+  hudCount.textContent=String(i+1).padStart(2,'0')+" / "+String(S.length).padStart(2,'0');
+  sceneLabel.textContent=s.label;
+  dur=s.dur; elapsedBefore=0;
+  progBar.style.width='0%';
+  if(playing){ sceneStart=performance.now(); cancelAnimationFrame(raf); raf=requestAnimationFrame(loop); }
+}
+function loop(now){
+  if(!playing) return;
+  const el=elapsedBefore+(now-sceneStart);
+  const frac=Math.min(el/dur,1);
+  progBar.style.width=(frac*100).toFixed(1)+'%';
+  if(frac>=1){ next(); }
+  else raf=requestAnimationFrame(loop);
+}
+function play(){ playing=true; btnPlay.textContent='⏸ 일시정지'; sceneStart=performance.now(); cancelAnimationFrame(raf); raf=requestAnimationFrame(loop); }
+function pause(){ playing=false; btnPlay.textContent='▶ 재생'; elapsedBefore+=performance.now()-sceneStart; cancelAnimationFrame(raf); }
+function toggle(){ playing?pause():play(); }
+function next(){ if(i<S.length-1){ i++; render(); } else { pause(); progBar.style.width='100%'; } }
+function prev(){ if(i>0){ i--; render(); } }
+function restart(){ i=0; playing=true; btnPlay.textContent='⏸ 일시정지'; render(); }
+
+btnPlay.onclick=toggle;
+document.getElementById('btnNext').onclick=()=>{ i<S.length-1?(i++,render()):null; };
+document.getElementById('btnPrev').onclick=prev;
+document.getElementById('btnRestart').onclick=restart;
+stage.onclick=()=>{ i<S.length-1?(i++,render()):restart(); };
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){ next(); }
+  else if(e.key==='ArrowLeft'){ prev(); }
+  else if(e.key===' '){ e.preventDefault(); toggle(); }
+});
+
+render();
+</script>
+</body>
+</html>

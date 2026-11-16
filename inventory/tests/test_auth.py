@@ -23,7 +23,8 @@ class AuthTests(TestCase):
                 self.client.logout()
                 response = self.client.post("/login/", {"username": username, "password": password})
                 self.assertEqual(response.status_code, 302)
-                self.assertEqual(response["Location"], "/dashboard/")
+                self.assertEqual(response["Location"], "/")
+                self.assertEqual(self.client.get("/").status_code, 200)
                 self.assertEqual(self.client.get("/dashboard/").status_code, 200)
 
     def test_repeated_failures_do_not_lock_account(self):
@@ -32,7 +33,7 @@ class AuthTests(TestCase):
             self.assertEqual(failed.status_code, 200)
         success = self.client.post("/login/", {"username": "maint", "password": "maint123"})
         self.assertEqual(success.status_code, 302)
-        self.assertEqual(success["Location"], "/dashboard/")
+        self.assertEqual(success["Location"], "/")
 
     def test_logout_requires_post(self):
         self.client.login(username="maint", password="maint123")

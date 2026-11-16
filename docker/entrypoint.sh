@@ -31,6 +31,7 @@ PY
 
 python manage.py migrate --noinput
 python manage.py seed_lab
+python manage.py import_intranet
 exec gunicorn opswatch.wsgi:application \
   --bind 0.0.0.0:8000 \
   --workers 1 \

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="crumb"><b>업무포털</b> · 통합 상황판</div>
+
+<div class="widgets">
+  <div class="widget">
+    <div class="n">1,284</div>
+    <div class="l">금일 접속 대원</div>
+    <div class="d up">▲ 어제 대비 +3.2%</div>
+  </div>
+  <div class="widget">
+    <div class="n">7</div>
+    <div class="l">미결 결재</div>
+    <div class="d dn">▲ 신규 2건</div>
+  </div>
+  <div class="widget">
+    <div class="n">DEF-3</div>
+    <div class="l">현 경계태세</div>
+    <div class="d">정상 유지</div>
+  </div>
+  <div class="widget">
+    <div class="n">정상</div>
+    <div class="l">전산망 상태</div>
+    <div class="d up">가용률 99.98%</div>
+  </div>
+</div>
+
+<div class="cols">
+  <div class="panel">
+    <div class="hd"><span class="tag"></span><h2>공지사항</h2>
+      <span class="rt">정보통신처</span></div>
+    <div class="bd">
+      <ul class="feed">
+        <li><span class="cat urgent">긴급</span>
+          <span>비밀번호 정기 변경 기간 안내 (전 대원 대상)</span>
+          <span class="dt">11-16</span></li>
+        <li><span class="cat">보안</span>
+          <span>USB 등 외부저장매체 반입 통제 강화 시행</span>
+          <span class="dt">11-15</span></li>
+        <li><span class="cat">공지</span>
+          <span>통합업무체계 {{ SYSTEM_VER }} 정기 점검 (11/18 02:00~04:00)</span>
+          <span class="dt">11-14</span></li>
+        <li><span class="cat">교육</span>
+          <span>4분기 정보보호 교육 이수 요망 (미이수자 확인)</span>
+          <span class="dt">11-12</span></li>
+        <li><span class="cat">인사</span>
+          <span>동계 휴가 신청서 제출 기한 안내</span>
+          <span class="dt">11-11</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="hd"><span class="tag"></span><h2>업무 바로가기</h2></div>
+    <div class="bd">
+      <ul class="feed">
+        <li><span class="cat">설정</span>
+          <span><a href="/lab/hardcoded">시스템 환경설정 — 연동 서버·키 관리</a></span></li>
+        <li><span class="cat">진단</span>
+          <span><a href="/lab/cmdi">네트워크 진단 — 통신 상태 점검(ping)</a></span></li>
+        <li><span class="cat">인사</span>
+          <span><a href="/lab/weakpw">대원 계정등록 — 신규 인원 계정 발급</a></span></li>
+        <li><span class="cat">인증</span>
+          <span><a href="/lab/login">인증 관리 — 관리자 로그인</a></span></li>
+      </ul>
+      <div class="notice" style="margin-top:14px;color:#8aa3bf;">
+        담당자 외 접근이 제한된 메뉴는 권한 승인 후 이용 가능합니다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<details class="instructor">
+  <summary>교관 참고자료 (발표용 · 청중에게는 접힌 상태)</summary>
+  <div class="ibd explain">
+    이 포털은 KISA 보안약점 진단가이드 기반 <b>시큐어코딩 실습 환경</b>입니다.
+    상단 메뉴 4개가 각각 실습 항목이며, 각 페이지의 "교관 참고자료"에서
+    <span class="statepill vuln">취약</span> / <span class="statepill safe">안전</span>
+    버전을 전환하며 시연합니다.<br><br>
+    · 시스템 환경설정 → 하드코드된 중요정보 (CWE-798/259)<br>
+    · 네트워크 진단 → OS 명령어 삽입 (CWE-78)<br>
+    · 대원 계정등록 → 취약한 비밀번호 허용 (CWE-521)<br>
+    · 인증 관리 → 반복 인증시도 제한 부재 (CWE-307)<br><br>
+    기본 관리자 계정: <span class="atk">admin / Soldier!2024</span>
+  </div>
+</details>
+{% endblock %}

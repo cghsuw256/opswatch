@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ SYSTEM_NAME }} | {{ SYSTEM_FULL }}{% endblock %}</title>
+  <style>
+    :root{
+      --navy:#0b1b2e; --navy2:#0f2338; --panel:#12294180; --line:#1f3b5c;
+      --ink:#dbe6f2; --mut:#8aa3bf; --gold:#c9a24b; --accent:#2d6cb5;
+      --ok:#2f8f5b; --bad:#b4453f;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:"맑은 고딕","Malgun Gothic","Segoe UI",sans-serif;
+      background:#081524;color:var(--ink);font-size:14px;line-height:1.55;}
+    a{color:#7fb2e6;text-decoration:none;}
+
+    /* 보안등급 배너 */
+    .clsf{background:#7a1f1f;color:#ffdede;text-align:center;font-size:11px;
+      letter-spacing:3px;padding:3px;font-weight:bold;}
+
+    /* 상단 헤더 */
+    header.top{background:linear-gradient(180deg,#0e2237,#0a1a2b);
+      border-bottom:1px solid var(--line);}
+    .top .bar{max-width:1120px;margin:0 auto;padding:12px 24px;
+      display:flex;align-items:center;justify-content:space-between;}
+    .brand{display:flex;align-items:center;gap:13px;}
+    .crest{width:42px;height:46px;position:relative;flex:none;}
+    .crest svg{width:42px;height:46px;}
+    .brand .t1{font-size:17px;font-weight:bold;color:#eaf1f8;letter-spacing:1px;}
+    .brand .t2{font-size:11px;color:var(--mut);letter-spacing:.5px;}
+    .top .meta{text-align:right;font-size:12px;color:var(--mut);}
+    .top .meta b{color:#dbe6f2;}
+    .top .meta a{color:#9ab;}
+
+    /* 메뉴 */
+    nav.menu{background:#0c1f33;border-bottom:1px solid var(--line);}
+    nav.menu .inner{max-width:1120px;margin:0 auto;padding:0 16px;display:flex;}
+    nav.menu a{padding:12px 18px;font-size:13px;color:#bcd0e6;
+      border-right:1px solid #13304c;display:inline-block;}
+    nav.menu a:hover{background:#12304d;color:#fff;}
+    nav.menu a.active{background:var(--accent);color:#fff;}
+
+    /* 본문 */
+    .shell{max-width:1120px;margin:0 auto;padding:22px 24px 40px;}
+    .crumb{font-size:12px;color:var(--mut);margin-bottom:16px;}
+    .crumb b{color:#cfe0f2;}
+
+    .panel{background:#0e2135;border:1px solid var(--line);border-radius:6px;
+      margin-bottom:20px;}
+    .panel .hd{padding:13px 18px;border-bottom:1px solid var(--line);
+      display:flex;align-items:center;gap:10px;background:#102844;
+      border-radius:6px 6px 0 0;}
+    .panel .hd .tag{width:4px;height:16px;background:var(--gold);border-radius:2px;}
+    .panel .hd h2{font-size:15px;color:#eaf1f8;font-weight:bold;}
+    .panel .hd .rt{margin-left:auto;font-size:11px;color:var(--mut);}
+    .panel .bd{padding:18px;}
+
+    label{display:block;font-size:12px;margin:12px 0 6px;color:#a9c0d8;}
+    input[type=text],input[type=password]{width:100%;padding:10px 12px;
+      border-radius:4px;border:1px solid #27476b;background:#0a1a2b;
+      color:#eaf1f8;font-size:14px;}
+    input:focus{outline:none;border-color:var(--accent);}
+    button{margin-top:16px;background:var(--accent);color:#fff;border:none;
+      padding:10px 22px;border-radius:4px;font-size:14px;cursor:pointer;
+      font-weight:bold;letter-spacing:.5px;}
+    button:hover{background:#3a7fcf;}
+
+    pre{background:#071320;border:1px solid #1b3350;border-radius:5px;
+      padding:13px;overflow:auto;font-size:12.5px;color:#cfe0d6;
+      white-space:pre-wrap;word-break:break-all;margin-top:10px;
+      font-family:Consolas,monospace;}
+    table.kv{width:100%;border-collapse:collapse;margin-top:6px;}
+    table.kv td{padding:9px 12px;border-bottom:1px solid #16304b;font-size:13px;}
+    table.kv td:first-child{color:#9fb8d2;width:180px;}
+    table.kv td:last-child{color:#e8c98a;font-family:Consolas,monospace;}
+    .msg{padding:11px 14px;border-radius:5px;margin-top:14px;font-size:13.5px;}
+    .msg.ok{background:#12351f;color:#bdeccb;border:1px solid #2f8f5b;}
+    .msg.bad{background:#361816;color:#f2c3c0;border:1px solid #b4453f;}
+    .notice{font-size:13px;color:#b7cbe0;}
+
+    /* 대시보드 위젯 */
+    .widgets{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+      margin-bottom:20px;}
+    .widget{background:#0e2135;border:1px solid var(--line);border-radius:6px;
+      padding:16px;}
+    .widget .n{font-size:26px;font-weight:bold;color:#eaf1f8;}
+    .widget .l{font-size:12px;color:var(--mut);margin-top:3px;}
+    .widget .d{font-size:11px;margin-top:8px;}
+    .up{color:#5fc389;} .dn{color:#e08a85;}
+    .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+    ul.feed{list-style:none;}
+    ul.feed li{padding:10px 0;border-bottom:1px solid #16304b;font-size:13px;
+      display:flex;gap:10px;}
+    ul.feed li .cat{font-size:11px;color:#081524;background:#8fb0cf;
+      border-radius:3px;padding:1px 7px;flex:none;height:18px;}
+    ul.feed li .cat.urgent{background:#d79a3f;}
+    ul.feed li .dt{margin-left:auto;color:var(--mut);font-size:11px;flex:none;}
+
+    /* 교관용(발표자) 패널 - 평소엔 접힘 */
+    details.instructor{margin-top:20px;border:1px dashed #3a5a7f;border-radius:6px;
+      background:#0a1a2b;}
+    details.instructor>summary{cursor:pointer;padding:10px 16px;font-size:12px;
+      color:#89a7c6;list-style:none;}
+    details.instructor>summary::-webkit-details-marker{display:none;}
+    details.instructor>summary::before{content:"▸ ";color:#5f80a3;}
+    details.instructor[open]>summary::before{content:"▾ ";}
+    .instructor .ibd{padding:0 16px 16px;}
+    .modebar{display:flex;gap:8px;margin:10px 0 14px;}
+    .modebar a{padding:6px 16px;border-radius:4px;font-size:12px;
+      border:1px solid #3a5c7f;}
+    .modebar a.vuln{background:#361816;color:#f0b4b0;border-color:#6a3335;}
+    .modebar a.safe{background:#12351f;color:#a9ecc0;border-color:#2f6b47;}
+    .modebar a.active{outline:2px solid #ffffff44;font-weight:bold;}
+    .statepill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:3px;}
+    .statepill.vuln{background:#5a2326;color:#ffc2c2;}
+    .statepill.safe{background:#1f5236;color:#b7f3cc;}
+    .explain{font-size:12.5px;color:#aec4da;line-height:1.7;}
+    .explain b{color:#dce8f4;} .atk{font-family:Consolas,monospace;color:#e8b572;}
+
+    footer.bot{border-top:1px solid var(--line);background:#0a1a2b;
+      font-size:11px;color:#6d87a3;}
+    footer.bot .fi{max-width:1120px;margin:0 auto;padding:12px 24px;
+      display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+    @media(max-width:860px){.widgets{grid-template-columns:repeat(2,1fr);}
+      .cols{grid-template-columns:1fr;} nav.menu .inner{overflow-x:auto;}}
+  </style>
+</head>
+<body>
+  <div class="clsf">대 외 비 · FOR OFFICIAL USE ONLY · 비인가자 접속 금지</div>
+
+  <header class="top">
+    <div class="bar">
+      <div class="brand">
+        <div class="crest">
+          <svg viewBox="0 0 42 46" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 1 L40 7 V22 C40 34 32 42 21 45 C10 42 2 34 2 22 V7 Z"
+              fill="#102a45" stroke="#c9a24b" stroke-width="1.6"/>
+            <path d="M21 9 L21 37 M11 15 L31 15" stroke="#c9a24b"
+              stroke-width="2" fill="none"/>
+            <circle cx="21" cy="24" r="5" fill="none" stroke="#7fb2e6"
+              stroke-width="1.6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="t1">{{ SYSTEM_NAME }} <span style="font-weight:normal;color:#8aa3bf;font-size:13px;">{{ SYSTEM_FULL }}</span></div>
+          <div class="t2">{{ UNIT_NAME }} · 통합업무지원체계</div>
+        </div>
+      </div>
+      <div class="meta">
+        {% if user %}
+          <div>접속자 <b>{{ user }}</b> · 권한 ADMIN</div>
+          <div>{{ now.strftime('%Y-%m-%d (%a) %H:%M') }} · IP {{ client_ip }} · <a href="/logout">로그아웃</a></div>
+        {% else %}
+          <div><b>비인증</b> 세션</div>
+          <div>{{ now.strftime('%Y-%m-%d (%a) %H:%M') }} · IP {{ client_ip }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <nav class="menu">
+    <div class="inner">
+      <a href="/">업무포털</a>
+      <a href="/lab/hardcoded">시스템 환경설정</a>
+      <a href="/lab/cmdi">네트워크 진단</a>
+      <a href="/lab/weakpw">대원 계정등록</a>
+      <a href="/lab/login">인증 관리</a>
+    </div>
+  </nav>
+
+  <div class="shell">
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer class="bot">
+    <div class="fi">
+      <div>{{ SYSTEM_NAME }} {{ SYSTEM_FULL }} {{ SYSTEM_VER }} · {{ UNIT_NAME }} 정보통신처</div>
+      <div>본 체계는 군사보안 대상입니다 · 접속기록은 보존·감사됩니다</div>
+    </div>
+  </footer>
+</body>
+</html>

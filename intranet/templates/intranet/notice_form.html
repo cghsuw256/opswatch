@@ -1,0 +1,8 @@
+{% extends "intranet/base.html" %}
+{% block title %}공지 작성 · 국방망 인트라넷{% endblock %}
+{% block page_name %}공지 작성{% endblock %}
+{% block intranet_heading %}공지 작성{% endblock %}
+{% block intranet_description %}부대원 전체에게 안내할 내용을 작성합니다.{% endblock %}
+{% block intranet_content %}
+<form method="post" action="{% url 'intranet:notice_new' %}" class="card intra-form">{% csrf_token %}{% include "intranet/fields.html" %}<div class="intra-row"><a class="btn" href="{% url 'intranet:notices' %}">취소</a><button class="btn primary" type="submit">공지 등록</button></div></form>
+{% endblock %}

@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}국방망 인트라넷{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'opswatch/app.css' %}?v=20261116-assistant">
+  <link rel="stylesheet" href="{% static 'intranet/shell.css' %}">
+  {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}console{% endblock %}">
   <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -24,42 +26,60 @@
       <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
     </defs>
   </svg>
+  <a class="shell-skip" href="#main-content">본문 바로가기</a>
   <aside class="mast" aria-label="주 메뉴">
-    <a class="brand" href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'staff' %}{% endif %}">
+    <a class="brand" href="{% if user.is_authenticated %}{% url 'intranet:home' %}{% else %}{% url 'staff' %}{% endif %}">
       <span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span>
       <span><strong>국방망 인트라넷</strong><small>NETWORK OPERATIONS</small></span>
     </a>
-    <p class="nav-section">OPERATIONS CONSOLE</p>
-    <nav aria-label="운영 메뉴">
-      {% if user.is_authenticated %}
-        <a class="{% if request.path == '/dashboard/' %}active{% endif %}" {% if request.path == '/dashboard/' %}aria-current="page"{% endif %} href="{% url 'dashboard' %}"><svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg>운영 개요<span class="nav-arrow" aria-hidden="true">›</span></a>
-      {% endif %}
-      <a class="{% if request.path == '/staff/' %}active{% endif %}" {% if request.path == '/staff/' %}aria-current="page"{% endif %} href="{% url 'staff' %}"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>당직 연락망<span class="nav-arrow" aria-hidden="true">›</span></a>
-      {% if user.is_authenticated %}
-        <a class="{% if request.path == '/support/' %}active{% endif %}" {% if request.path == '/support/' %}aria-current="page"{% endif %} href="{% url 'support' %}"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>내부 토큰<span class="nav-arrow" aria-hidden="true">›</span></a>
-        <a class="{% if '/admin/diagnostics/' in request.path %}active{% endif %}" {% if '/admin/diagnostics/' in request.path %}aria-current="page"{% endif %} href="{% url 'diagnostics' %}"><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>호스트 진단<span class="nav-arrow" aria-hidden="true">›</span></a>
-        <a class="{% if request.path == '/ops/assistant/' %}active{% endif %}" {% if request.path == '/ops/assistant/' %}aria-current="page"{% endif %} href="{% url 'assistant' %}"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>상황실 에이전트<span class="nav-arrow" aria-hidden="true">›</span></a>
-      {% endif %}
+    {% if user.is_authenticated %}
+    <p class="nav-section">UNIT INTRANET</p>
+    <nav aria-label="인트라넷 주 메뉴">
+      <a class="{% if request.path == '/' %}active{% endif %}" {% if request.path == '/' %}aria-current="page"{% endif %} href="{% url 'intranet:home' %}"><svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg>홈<span class="nav-arrow" aria-hidden="true">›</span></a>
+      <a class="{% if '/notices/' in request.path %}active{% endif %}" {% if '/notices/' in request.path %}aria-current="page"{% endif %} href="{% url 'intranet:notices' %}"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>공지사항<span class="nav-arrow" aria-hidden="true">›</span></a>
+      <a class="{% if '/board/' in request.path %}active{% endif %}" {% if '/board/' in request.path %}aria-current="page"{% endif %} href="{% url 'intranet:board' %}"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>게시판<span class="nav-arrow" aria-hidden="true">›</span></a>
+      <a class="{% if '/approvals/' in request.path %}active{% endif %}" {% if '/approvals/' in request.path %}aria-current="page"{% endif %} href="{% url 'intranet:approvals' %}"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>결재{% if pending_approval_count %}<span class="shell-count">{{ pending_approval_count }}</span>{% endif %}<span class="nav-arrow" aria-hidden="true">›</span></a>
+      <a class="{% if '/calendar/' in request.path %}active{% endif %}" {% if '/calendar/' in request.path %}aria-current="page"{% endif %} href="{% url 'intranet:calendar' %}"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>일정<span class="nav-arrow" aria-hidden="true">›</span></a>
+      <a class="{% if '/people/' in request.path %}active{% endif %}" {% if '/people/' in request.path %}aria-current="page"{% endif %} href="{% url 'intranet:people' %}"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>부대원<span class="nav-arrow" aria-hidden="true">›</span></a>
+      <a class="{% if request.path == '/dashboard/' or request.path == '/support/' or request.path == '/staff/' or '/admin/diagnostics/' in request.path or '/ops/assistant/' in request.path %}active{% endif %}" {% if request.path == '/dashboard/' or request.path == '/support/' or request.path == '/staff/' or '/admin/diagnostics/' in request.path or '/ops/assistant/' in request.path %}aria-current="location"{% endif %} href="{% url 'dashboard' %}"><svg class="icon" aria-hidden="true"><use href="#i-server"/></svg>운영 관리<span class="nav-arrow" aria-hidden="true">›</span></a>
     </nav>
+    {% if request.path == '/dashboard/' or request.path == '/support/' or request.path == '/staff/' or '/admin/diagnostics/' in request.path or '/ops/assistant/' in request.path %}
+    <p class="nav-section">OPERATIONS CONSOLE</p>
+    <nav class="shell-secondary" aria-label="운영 관리 세부 메뉴">
+      <a class="{% if request.path == '/dashboard/' %}active{% endif %}" {% if request.path == '/dashboard/' %}aria-current="page"{% endif %} href="{% url 'dashboard' %}">운영 개요</a>
+      <a class="{% if request.path == '/staff/' %}active{% endif %}" {% if request.path == '/staff/' %}aria-current="page"{% endif %} href="{% url 'staff' %}">당직 연락망</a>
+      <a class="{% if request.path == '/support/' %}active{% endif %}" {% if request.path == '/support/' %}aria-current="page"{% endif %} href="{% url 'support' %}">내부 토큰</a>
+      <a class="{% if '/admin/diagnostics/' in request.path %}active{% endif %}" {% if '/admin/diagnostics/' in request.path %}aria-current="page"{% endif %} href="{% url 'diagnostics' %}">호스트 진단</a>
+      <a class="{% if '/ops/assistant/' in request.path %}active{% endif %}" {% if '/ops/assistant/' in request.path %}aria-current="page"{% endif %} href="{% url 'assistant' %}">상황실 에이전트</a>
+    </nav>
+    {% endif %}
+    {% else %}
+    <p class="nav-section">OPSWATCH</p>
+    <nav aria-label="공개 메뉴">
+      <a class="{% if request.path == '/staff/' %}active{% endif %}" {% if request.path == '/staff/' %}aria-current="page"{% endif %} href="{% url 'staff' %}"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>당직 연락망</a>
+      <a class="{% if request.path == '/login/' %}active{% endif %}" {% if request.path == '/login/' %}aria-current="page"{% endif %} href="{% url 'login' %}"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>로그인</a>
+    </nav>
+    {% endif %}
     <div class="sidebar-foot"><strong>OPSWATCH</strong>Infrastructure Management Console</div>
   </aside>
   <header class="topbar">
     <div class="breadcrumb">
       <svg class="icon" aria-hidden="true"><use href="#i-grid"/></svg>
-      <span>망운용 콘솔</span><span class="breadcrumb-separator" aria-hidden="true">/</span>
+      <span>국방망 인트라넷</span><span class="breadcrumb-separator" aria-hidden="true">/</span>
       <strong>{% block page_name %}운영 개요{% endblock %}</strong>
     </div>
     <div class="mast-user">
       {% if user.is_authenticated %}
         <span class="user-avatar"><svg class="icon" aria-hidden="true"><use href="#i-user"/></svg></span>
-        <span class="user-info"><strong>{{ user.username }}</strong><small>운영 계정</small></span>
+        <a class="user-info shell-profile" href="{% url 'intranet:profile' %}"><strong>{{ profile.name|default:user.username }}</strong><small>{{ profile.dept|default:"내 정보" }}</small></a>
         <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">로그아웃</button></form>
+        <a class="shell-mobile-profile" href="{% url 'intranet:profile' %}">내 정보</a>
       {% else %}
-        <a class="btn" href="{% url 'login' %}">운영자 로그인 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="btn" href="{% url 'login' %}">로그인 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
       {% endif %}
     </div>
   </header>
-  <main class="workspace">
+  <main class="workspace" id="main-content">
     {% block content %}{% endblock %}
   </main>
   {% block scripts %}{% endblock %}
