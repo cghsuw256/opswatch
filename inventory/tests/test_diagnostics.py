@@ -31,7 +31,7 @@ class MetadataTests(TestCase):
             self.assertEqual(self.client.get(path).context["diagnostics_token"], settings.OPSWATCH_INTERNAL_TOKEN)
         other = Client()
         other.login(username="harin", password="harin123")
-        self.assertEqual(other.get("/admin/diagnostics/").context["diagnostics_token"], "")
+        self.assertEqual(other.get("/admin/diagnostics/").status_code, 403)
         self.assertEqual(other.get("/api/internal/metadata/").json(), response.json())
         self.client.post("/logout/")
         self.client.login(username="maint", password="maint123")
@@ -47,19 +47,26 @@ class MetadataTests(TestCase):
 
 @override_settings(OPSWATCH_RUNTIME="host", OPSWATCH_ENABLE_DIAGNOSTICS=True)
 class DiagnoseApiTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_lab", verbosity=0)
+
+    def setUp(self):
+        self.client.login(username="maint", password="maint123")
+
     def post_target(self, target, token=None, client=None):
         return (client or self.client).post(
             "/api/internal/diagnose/", json.dumps({"target": target}),
             content_type="application/json", HTTP_X_OPSWATCH_TOKEN=token or "",
         )
 
-    def test_token_only_request_reaches_host_gate_without_csrf(self):
+    def test_token_only_request_requires_login_without_csrf(self):
         client = Client(enforce_csrf_checks=True)
-        with patch("inventory.services.diagnostics.subprocess.run") as process:
+        with patch("inventory.views.run_ping_diagnosis") as service:
             response = self.post_target("web-01.lab.local; whoami", settings.OPSWATCH_INTERNAL_TOKEN, client)
-            self.assertEqual(response.status_code, 403)
+            self.assertEqual(response.status_code, 401)
             self.assertIn("error", response.json())
-            process.assert_not_called()
+            service.assert_not_called()
         self.assertNotIn("_auth_user_id", client.session)
 
     def test_missing_and_wrong_tokens_rejected_before_service(self):

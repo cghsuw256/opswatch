@@ -3,6 +3,7 @@ import json
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
@@ -110,6 +111,8 @@ def metadata_api(request):
 def diagnostics_page(request):
     if not request.user.is_authenticated:
         return redirect("login")
+    if not request.user.has_perm("inventory.run_diagnostics"):
+        raise PermissionDenied("호스트 진단 실행 권한이 없습니다.")
     return render(
         request,
         "inventory/diagnostics.html",
@@ -124,6 +127,8 @@ def diagnostics_page(request):
 def assistant_page(request):
     if not request.user.is_authenticated:
         return redirect("login")
+    if not request.user.has_perm("inventory.run_diagnostics"):
+        raise PermissionDenied("호스트 진단 실행 권한이 없습니다.")
     return render(
         request,
         "inventory/assistant.html",
@@ -142,9 +147,13 @@ def _read_json(request):
     return payload if isinstance(payload, dict) else None
 
 
-@csrf_exempt  # INTENTIONAL EDUCATIONAL WEAKNESS: same static token as diagnose_api.
+@csrf_exempt  # Educational lab: static token and missing CSRF protection remain.
 @require_POST
 def assistant_api(request):
+    if not request.user.is_authenticated:
+        return _json_error("인증이 필요합니다.", 401)
+    if not request.user.has_perm("inventory.run_diagnostics"):
+        return _json_error("호스트 진단 실행 권한이 없습니다.", 403)
     payload = _read_json(request)
     if payload is None:
         return _json_error("JSON 형식이 올바르지 않습니다.", 400)
@@ -176,9 +185,13 @@ def assistant_api(request):
     )
 
 
-@csrf_exempt  # INTENTIONAL EDUCATIONAL WEAKNESS: no session/CSRF. Static token is enough.
+@csrf_exempt  # Educational lab: static token and missing CSRF protection remain.
 @require_POST
 def diagnose_api(request):
+    if not request.user.is_authenticated:
+        return _json_error("인증이 필요합니다.", 401)
+    if not request.user.has_perm("inventory.run_diagnostics"):
+        return _json_error("호스트 진단 실행 권한이 없습니다.", 403)
     token = request.headers.get("X-OpsWatch-Token", "")
     target = ""
     content_type = request.content_type or ""

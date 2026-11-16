@@ -3,6 +3,7 @@ import subprocess
 from unittest.mock import patch
 
 from django.conf import settings
+from django.core.management import call_command
 from django.test import Client, TestCase, override_settings
 
 from inventory.services.diagnostics import _DIAGNOSTIC_SLOT
@@ -10,18 +11,25 @@ from inventory.services.diagnostics import _DIAGNOSTIC_SLOT
 
 @override_settings(OPSWATCH_RUNTIME="host", OPSWATCH_ENABLE_DIAGNOSTICS=True)
 class AssistantTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("seed_lab", verbosity=0)
+
+    def setUp(self):
+        self.client.login(username="maint", password="maint123")
+
     def post(self, payload, token=None, client=None):
         return (client or self.client).post(
             "/api/internal/assistant/", json.dumps(payload), content_type="application/json",
             HTTP_X_OPSWATCH_TOKEN=token or "",
         )
 
-    def test_token_only_request_reaches_disabled_gate_without_csrf(self):
+    def test_token_only_request_requires_login_without_csrf(self):
         browser = Client(enforce_csrf_checks=True)
-        with patch("inventory.services.diagnostics.subprocess.run") as process:
+        with patch("inventory.views.answer_ops_request") as service:
             response = self.post({"message": "확인", "target": "web-01.lab.local; whoami"}, settings.OPSWATCH_INTERNAL_TOKEN, browser)
-            self.assertEqual(response.status_code, 403)
-            process.assert_not_called()
+            self.assertEqual(response.status_code, 401)
+            service.assert_not_called()
         self.assertNotIn("_auth_user_id", browser.session)
 
     def test_api_rejects_missing_or_wrong_token(self):

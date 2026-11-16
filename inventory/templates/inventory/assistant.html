@@ -34,7 +34,7 @@
     <div class="card-body">
       <dl class="detail-list">
         <div><dt>호출 대상</dt><dd>내부 진단 API</dd></div>
-        <div><dt>API 인증</dt><dd>내부 토큰</dd></div>
+        <div><dt>API 인증</dt><dd>로그인 세션 · 진단 실행 권한 · 내부 토큰</dd></div>
         <div><dt>활성화 상태</dt><dd>{% if not diagnostics_enabled %}실행 비활성화{% elif diagnostics_token %}활성화됨{% else %}에이전트 상태 조회 필요{% endif %}</dd></div>
         <div><dt>실행 환경</dt><dd>격리 컨테이너 내부 셸</dd></div>
       </dl>

@@ -57,6 +57,31 @@ class AuthTests(TestCase):
                 self.assertTrue(user.check_password(username + "123"))
                 self.assertFalse(user.is_staff)
                 self.assertFalse(user.is_superuser)
+                self.assertEqual(
+                    user.has_perm("inventory.run_diagnostics"),
+                    username == "maint",
+                )
                 self.assertEqual(Employee.objects.filter(login_id=username).count(), 1)
         self.assertEqual(Employee.objects.count(), 4)
         self.assertEqual(Server.objects.count(), 3)
+
+    def test_seed_restores_direct_diagnostics_permissions(self):
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Permission
+
+        permission = Permission.objects.get(
+            content_type__app_label="inventory", codename="run_diagnostics",
+        )
+        users = get_user_model().objects
+        users.get(username="maint").user_permissions.remove(permission)
+        for username in ("seoyeon", "minjun", "harin"):
+            users.get(username=username).user_permissions.add(permission)
+
+        call_command("seed_lab", verbosity=0)
+
+        for username in ("maint", "seoyeon", "minjun", "harin"):
+            with self.subTest(username=username):
+                self.assertEqual(
+                    users.get(username=username).user_permissions.filter(pk=permission.pk).exists(),
+                    username == "maint",
+                )

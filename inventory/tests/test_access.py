@@ -1,3 +1,10 @@
+import json
+from types import SimpleNamespace
+from unittest.mock import patch
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.management import call_command
 from django.test import TestCase
 
@@ -57,3 +64,54 @@ class AccessControlTests(TestCase):
         assistant = self.client.get("/ops/assistant/")
         self.assertEqual(assistant.status_code, 200)
         self.assertEqual(assistant.context["diagnostics_token"], "")
+
+    def assert_diagnostics_access(self, allowed):
+        for path in ("/admin/diagnostics/", "/ops/assistant/"):
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 200 if allowed else 403)
+        result = SimpleNamespace(status="ok", output="diagnostic output", timed_out=False)
+        for path, service_name, return_value in (
+            ("/api/internal/diagnose/", "inventory.views.run_ping_diagnosis", result),
+            ("/api/internal/assistant/", "inventory.views.answer_ops_request", ("reply", result)),
+        ):
+            with self.subTest(path=path), patch(service_name, return_value=return_value) as service:
+                response = self.client.post(
+                    path, json.dumps({"target": "web-01.lab.local", "message": "확인"}),
+                    content_type="application/json",
+                    HTTP_X_OPSWATCH_TOKEN=settings.OPSWATCH_INTERNAL_TOKEN,
+                )
+                self.assertEqual(response.status_code, 200 if allowed else 403)
+                if allowed:
+                    service.assert_called_once()
+                else:
+                    service.assert_not_called()
+
+    def test_regular_users_cannot_execute_even_after_fetching_token(self):
+        for username in ("seoyeon", "minjun", "harin"):
+            with self.subTest(username=username):
+                self.client.logout()
+                self.assertTrue(self.client.login(username=username, password=username + "123"))
+                self.assertEqual(self.client.get("/support/").status_code, 200)
+                metadata = self.client.get("/api/internal/metadata/")
+                self.assertEqual(metadata.status_code, 200)
+                self.assertEqual(
+                    metadata.json()["metadata"]["internal_token"],
+                    settings.OPSWATCH_INTERNAL_TOKEN,
+                )
+                self.assert_diagnostics_access(False)
+
+    def test_permission_grant_and_revocation_override_username(self):
+        permission = Permission.objects.get(
+            content_type__app_label="inventory", codename="run_diagnostics",
+        )
+        maint = get_user_model().objects.get(username="maint")
+        harin = get_user_model().objects.get(username="harin")
+        self.client.force_login(maint)
+        self.assert_diagnostics_access(True)
+        maint.user_permissions.remove(permission)
+        self.assert_diagnostics_access(False)
+        harin.user_permissions.add(permission)
+        self.client.force_login(harin)
+        self.assert_diagnostics_access(True)
+        harin.user_permissions.remove(permission)
+        self.assert_diagnostics_access(False)

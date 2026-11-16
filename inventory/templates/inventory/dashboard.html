@@ -92,7 +92,7 @@
         </tbody>
       </table>
     </div>
-    <footer class="panel-footer metrics-footer"><div><span id="metrics-state" role="status">{% if seed_metrics %}실습 시뮬레이션 · 3초 갱신{% else %}저장된 측정값{% endif %}</span><time id="metrics-updated"></time><noscript><span>JavaScript 비활성: 최초 표시값 유지</span></noscript></div><a href="{% url 'diagnostics' %}">호스트 진단 →</a></footer>
+    <footer class="panel-footer metrics-footer"><div><span id="metrics-state" role="status">{% if seed_metrics %}실습 시뮬레이션 · 3초 갱신{% else %}저장된 측정값{% endif %}</span><time id="metrics-updated"></time><noscript><span>JavaScript 비활성: 최초 표시값 유지</span></noscript></div>{% if perms.inventory.run_diagnostics %}<a href="{% url 'diagnostics' %}">호스트 진단 →</a>{% else %}<span>호스트 진단 실행 권한 없음</span>{% endif %}</footer>
   </section>
   <section class="card module">
     <header><h2><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>최근 점검 기록</h2><span class="panel-meta">실제 저장된 {{ inspections|length }}건</span></header>

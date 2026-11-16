@@ -31,7 +31,7 @@
         <div><dt>요청 권한</dt><dd>로그인된 운영 계정</dd></div>
       </dl>
     </div>
-    <footer class="panel-footer"><a href="{% url 'diagnostics' %}">호스트 진단으로 이동 →</a></footer>
+    <footer class="panel-footer">{% if perms.inventory.run_diagnostics %}<a href="{% url 'diagnostics' %}">호스트 진단으로 이동 →</a>{% else %}<span>상태 조회는 가능하지만 호스트 진단 실행 권한은 없습니다.</span>{% endif %}</footer>
   </aside>
 </div>
 {% endblock %}

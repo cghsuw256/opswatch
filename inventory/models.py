@@ -38,6 +38,7 @@ class Server(models.Model):
 
     class Meta:
         ordering = ["hostname"]
+        permissions = [("run_diagnostics", "Can run host diagnostics")]
 
     def __str__(self):
         return self.hostname

@@ -49,8 +49,10 @@
       <a class="{% if request.path == '/dashboard/' %}active{% endif %}" {% if request.path == '/dashboard/' %}aria-current="page"{% endif %} href="{% url 'dashboard' %}">운영 개요</a>
       <a class="{% if request.path == '/staff/' %}active{% endif %}" {% if request.path == '/staff/' %}aria-current="page"{% endif %} href="{% url 'staff' %}">당직 연락망</a>
       <a class="{% if request.path == '/support/' %}active{% endif %}" {% if request.path == '/support/' %}aria-current="page"{% endif %} href="{% url 'support' %}">내부 토큰</a>
+      {% if perms.inventory.run_diagnostics %}
       <a class="{% if '/admin/diagnostics/' in request.path %}active{% endif %}" {% if '/admin/diagnostics/' in request.path %}aria-current="page"{% endif %} href="{% url 'diagnostics' %}">호스트 진단</a>
       <a class="{% if '/ops/assistant/' in request.path %}active{% endif %}" {% if '/ops/assistant/' in request.path %}aria-current="page"{% endif %} href="{% url 'assistant' %}">상황실 에이전트</a>
+      {% endif %}
     </nav>
     {% endif %}
     {% else %}

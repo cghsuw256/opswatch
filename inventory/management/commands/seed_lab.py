@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -16,6 +17,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         user_model = get_user_model()
+        diagnostic_permission = Permission.objects.get(
+            content_type__app_label="inventory",
+            content_type__model="server",
+            codename="run_diagnostics",
+        )
         # Fake lab credentials, intentionally weak for the local exercise.
         accounts = [
             (MAINT_USERNAME, MAINT_PASSWORD, "maint@opswatch.lab", "도윤", "박"),
@@ -36,6 +42,10 @@ class Command(BaseCommand):
             )
             user.set_password(password)
             user.save()
+            if username == MAINT_USERNAME:
+                user.user_permissions.add(diagnostic_permission)
+            else:
+                user.user_permissions.remove(diagnostic_permission)
 
         employees = [
             {
