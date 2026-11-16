@@ -4,7 +4,7 @@
 {% block page_name %}상황실 에이전트{% endblock %}
 {% block content %}
 <header class="module-head">
-  <div><p class="kicker">Operations Assistant</p><h1>상황실 에이전트</h1><p class="module-description">운영자 요청을 받아 내부 진단 API로 호스트 이름 해석을 실행합니다.</p></div>
+  <div><p class="kicker">Operations Assistant</p><h1>상황실 에이전트</h1><p class="module-description">운영자 요청을 받아 같은 호스트 상태 점검을 대신 실행합니다.</p></div>
   <span class="page-tag"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>운영 보조</span>
 </header>
 {% if not diagnostics_enabled %}
@@ -19,7 +19,7 @@
     <div class="card-body">
       <form id="assistant-form">
         {% csrf_token %}
-        <label>요청 내용<textarea name="message" rows="3" placeholder="web-01 이름 해석 결과를 확인해 주세요." required{% if not diagnostics_token %} disabled{% endif %}></textarea></label>
+        <label>요청 내용<textarea name="message" rows="3" placeholder="web-01 상태와 최근 점검 로그를 확인해 주세요." required{% if not diagnostics_token %} disabled{% endif %}></textarea></label>
         <label>진단 대상<input type="text" name="target" placeholder="web-01.lab.local" required{% if not diagnostics_token %} disabled{% endif %}></label>
         <button class="btn primary" type="submit"{% if not diagnostics_token %} disabled{% endif %}><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg>에이전트 실행</button>
       </form>

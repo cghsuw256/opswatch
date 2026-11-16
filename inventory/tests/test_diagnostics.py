@@ -123,12 +123,18 @@ class DiagnoseServiceTests(TestCase):
         self.assertIn(target, command)
         self.assertTrue(command.startswith("/usr/bin/getent hosts "))
 
-    def test_mocked_subprocess_never_executes_real_command(self):
-        completed = type("C", (), {"returncode": 0, "stdout": "ok\n", "stderr": ""})()
+    def test_mocked_subprocess_reports_saved_status_without_running_shell(self):
+        call_command("seed_lab", verbosity=0)
+        completed = type("C", (), {"returncode": 0, "stdout": "10.32.0.11 web-01.lab.local\n", "stderr": ""})()
         with override_settings(OPSWATCH_RUNTIME="container", OPSWATCH_ENABLE_DIAGNOSTICS=True):
             with patch("inventory.services.diagnostics.subprocess.run", return_value=completed) as mocked:
                 result = run_ping_diagnosis("web-01.lab.local")
         self.assertEqual(result.status, "ok")
+        self.assertIn("상태: 정상", result.output)
+        self.assertIn("CPU 점유율: 23%", result.output)
+        self.assertIn("메모리 점유율: 41%", result.output)
+        self.assertIn("TLS 인증서 만료일 확인", result.output)
+        self.assertNotIn("추가 명령 출력", result.output)
         mocked.assert_called_once()
         args, kwargs = mocked.call_args
         self.assertEqual(args[0], "/usr/bin/getent hosts web-01.lab.local")

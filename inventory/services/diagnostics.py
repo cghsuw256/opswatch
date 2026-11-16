@@ -17,6 +17,7 @@ import threading
 from dataclasses import dataclass
 
 from django.conf import settings
+from django.utils import timezone
 
 MAX_OUTPUT_BYTES = 8192
 TIMEOUT_SECONDS = 3
@@ -57,6 +58,40 @@ def build_lab_command(target: str) -> str:
     return f"/usr/bin/getent hosts {target}"
 
 
+def format_host_report(target: str, raw: str) -> str:
+    from inventory.models import Server
+
+    hostname = target.split(";", 1)[0].strip()
+    server = Server.objects.filter(hostname=hostname).select_related().first()
+    lines = ["검사 항목: 저장된 호스트 상태"]
+    if server is None:
+        lines.extend([f"대상: {hostname}", "판정: 등록되지 않은 호스트"])
+    else:
+        status = dict(Server.STATUS_CHOICES).get(server.status, server.status)
+        lines.extend(
+            [
+                f"호스트: {server.hostname}",
+                f"주소: {server.address}",
+                f"역할: {server.role}",
+                f"상태: {status}",
+                f"CPU 점유율: {server.cpu_percent}%",
+                f"메모리 점유율: {server.memory_percent}%",
+                "최근 점검 로그:",
+            ]
+        )
+        rows = list(server.inspections.all()[:5])
+        if not rows:
+            lines.append("- 기록 없음")
+        for row in rows:
+            when = timezone.localtime(row.inspected_at).strftime("%Y-%m-%d %H:%M")
+            result = "통과" if row.passed else "실패"
+            lines.append(f"- {when} {row.inspector_name} / {row.summary} / {result}")
+            lines.append(f"  {row.detail}")
+    if any(char in target for char in ";|&$`\n"):
+        lines.extend(["추가 명령 출력:", raw.strip() or "(명령 출력 없음)"])
+    return "\n".join(lines)
+
+
 def run_ping_diagnosis(target: str) -> DiagnosisResult:
     if not diagnostics_enabled():
         raise DiagnosticsDisabled("진단 실행은 지정된 실습 컨테이너 안에서만 허용됩니다.")
@@ -81,9 +116,9 @@ def run_ping_diagnosis(target: str) -> DiagnosisResult:
             timeout=TIMEOUT_SECONDS,
         )
         merged = (completed.stdout or "") + (completed.stderr or "")
-        output = merged[:MAX_OUTPUT_BYTES]
+        output = format_host_report(cleaned, merged[:MAX_OUTPUT_BYTES])
         status = "ok" if completed.returncode == 0 else "error"
-        return DiagnosisResult(status=status, output=output or "(출력 없음)")
+        return DiagnosisResult(status=status, output=output)
     except subprocess.TimeoutExpired as exc:
         partial = ""
         if exc.stdout:
