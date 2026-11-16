@@ -1,8 +1,7 @@
 """Situation-room assistant for the OpsWatch lab.
 
-The assistant does not build a shell command. It forwards the operator-supplied
-target to the existing diagnosis service, which remains the command-construction
-boundary.
+The assistant forwards the operator-supplied target to the same container-only
+shell diagnostic service as the diagnostic API.
 """
 
 from __future__ import annotations

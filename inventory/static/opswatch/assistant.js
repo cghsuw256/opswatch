@@ -8,7 +8,7 @@
   form.addEventListener("submit", async function (event) {
     event.preventDefault();
     if (!token) {
-      statusEl.textContent = "토큰 발급 필요";
+      statusEl.textContent = "에이전트 상태 조회 필요";
       return;
     }
     statusEl.textContent = "확인 중";

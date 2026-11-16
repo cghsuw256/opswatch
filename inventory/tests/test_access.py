@@ -35,9 +35,12 @@ class AccessControlTests(TestCase):
             self.assertEqual(response.status_code, 302, path)
             self.assertIn("/login/", response["Location"])
 
-    def test_token_issue_requires_login(self):
-        response = self.client.get("/api/internal/token/")
+    def test_metadata_requires_login(self):
+        response = self.client.get("/api/internal/metadata/")
         self.assertEqual(response.status_code, 401)
+
+    def test_root_opens_staff(self):
+        self.assertRedirects(self.client.get("/"), "/staff/", fetch_redirect_response=False)
 
 
     def test_authenticated_pages_render(self):
@@ -48,5 +51,7 @@ class AccessControlTests(TestCase):
         self.assertEqual(support.status_code, 200)
         diagnostics = self.client.get("/admin/diagnostics/")
         self.assertEqual(diagnostics.status_code, 200)
-        self.assertNotContains(diagnostics, 'name="token"')
-        self.assertNotContains(diagnostics, "ow-lab-internal-9f3c2a1b7e44")
+        self.assertEqual(diagnostics.context["diagnostics_token"], "")
+        assistant = self.client.get("/ops/assistant/")
+        self.assertEqual(assistant.status_code, 200)
+        self.assertEqual(assistant.context["diagnostics_token"], "")

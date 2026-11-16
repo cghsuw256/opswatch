@@ -1,51 +1,67 @@
 import json
+import subprocess
 from unittest.mock import patch
 
-from django.core.management import call_command
-from django.test import TestCase
+from django.conf import settings
+from django.test import Client, TestCase, override_settings
 
-from inventory.services.diagnostics import DiagnosisResult
+from inventory.services.diagnostics import _DIAGNOSTIC_SLOT
 
 
+@override_settings(OPSWATCH_RUNTIME="host", OPSWATCH_ENABLE_DIAGNOSTICS=True)
 class AssistantTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        call_command("seed_lab", verbosity=0)
-
-    def test_page_requires_login(self):
-        response = self.client.get("/ops/assistant/")
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/login/", response["Location"])
-
-    def test_page_stays_inactive_until_token_issue(self):
-        self.client.login(username="maint", password="maint123")
-        page = self.client.get("/ops/assistant/")
-        self.assertEqual(page.context["diagnostics_token"], "")
-        self.assertNotContains(page, "ow-lab-internal-9f3c2a1b7e44")
-
-        self.client.get("/api/internal/token/")
-        page = self.client.get("/ops/assistant/")
-        self.assertEqual(page.context["diagnostics_token"], "ow-lab-internal-9f3c2a1b7e44")
-
-    def test_api_reuses_static_token_without_session(self):
-        target = "web-01.lab.local; printf OPSWATCH_LAB_AGENT"
-        fake = DiagnosisResult(status="ok", output="agent-output")
-        with patch("inventory.services.assistant.run_ping_diagnosis", return_value=fake) as mocked:
-            response = self.client.post(
-                "/api/internal/assistant/",
-                data=json.dumps({"message": "이름 해석 확인", "target": target}),
-                content_type="application/json",
-                HTTP_X_OPSWATCH_TOKEN="ow-lab-internal-9f3c2a1b7e44",
-            )
-        self.assertEqual(response.status_code, 200)
-        mocked.assert_called_once_with(target)
-        self.assertIn("agent-output", response.json()["reply"])
-        self.assertNotIn("ow-lab-internal-9f3c2a1b7e44", response.json()["reply"])
-
-    def test_api_rejects_missing_token(self):
-        response = self.client.post(
-            "/api/internal/assistant/",
-            data=json.dumps({"message": "확인", "target": "web-01.lab.local"}),
-            content_type="application/json",
+    def post(self, payload, token=None, client=None):
+        return (client or self.client).post(
+            "/api/internal/assistant/", json.dumps(payload), content_type="application/json",
+            HTTP_X_OPSWATCH_TOKEN=token or "",
         )
-        self.assertEqual(response.status_code, 403)
+
+    def test_token_only_request_reaches_disabled_gate_without_csrf(self):
+        browser = Client(enforce_csrf_checks=True)
+        with patch("inventory.services.diagnostics.subprocess.run") as process:
+            response = self.post({"message": "확인", "target": "web-01.lab.local; whoami"}, settings.OPSWATCH_INTERNAL_TOKEN, browser)
+            self.assertEqual(response.status_code, 403)
+            process.assert_not_called()
+        self.assertNotIn("_auth_user_id", browser.session)
+
+    def test_api_rejects_missing_or_wrong_token(self):
+        with patch("inventory.views.answer_ops_request") as service:
+            for token in (None, "wrong"):
+                self.assertEqual(self.post({"message": "확인", "target": "web-01.lab.local"}, token).status_code, 403)
+            service.assert_not_called()
+
+    def test_invalid_payloads(self):
+        for payload in ([], None, "text", {"message": []}, {"message": 1},
+                        {"message": ""}, {"message": "  "},
+                        {"message": "확인", "target": []},
+                        {"message": "확인", "target": ""},
+                        {"message": "확인", "target": "x" * 201}):
+            with self.subTest(payload=payload):
+                self.assertEqual(self.post(payload, settings.OPSWATCH_INTERNAL_TOKEN).status_code, 400)
+        for body in ("[", b"\xff"):
+            self.assertEqual(self.client.post("/api/internal/assistant/", body, content_type="application/json",
+                                             HTTP_X_OPSWATCH_TOKEN=settings.OPSWATCH_INTERNAL_TOKEN).status_code, 400)
+
+    @override_settings(OPSWATCH_RUNTIME="container", OPSWATCH_ENABLE_DIAGNOSTICS=True)
+    def test_reply_contains_service_output(self):
+        with patch("inventory.services.diagnostics.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "real command output", "")):
+            response = self.post({"message": "확인", "target": "web-01.lab.local; id"}, settings.OPSWATCH_INTERNAL_TOKEN)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["ok"])
+        self.assertFalse(response.json()["timed_out"])
+        self.assertIn("real command output", response.json()["reply"])
+
+    @override_settings(OPSWATCH_RUNTIME="container", OPSWATCH_ENABLE_DIAGNOSTICS=True)
+    def test_timeout_and_busy_are_reported(self):
+        payload = {"message": "확인", "target": "web-01.lab.local"}
+        with patch("inventory.services.diagnostics.subprocess.run", side_effect=subprocess.TimeoutExpired("getent", 3, output="partial")):
+            response = self.post(payload, settings.OPSWATCH_INTERNAL_TOKEN)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()["ok"])
+        self.assertTrue(response.json()["timed_out"])
+        self.assertIn("partial", response.json()["reply"])
+        self.assertTrue(_DIAGNOSTIC_SLOT.acquire(blocking=False))
+        try:
+            self.assertEqual(self.post(payload, settings.OPSWATCH_INTERNAL_TOKEN).status_code, 429)
+        finally:
+            _DIAGNOSTIC_SLOT.release()

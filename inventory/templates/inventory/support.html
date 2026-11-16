@@ -4,30 +4,30 @@
 {% block page_name %}내부 토큰{% endblock %}
 {% block content %}
 <header class="module-head">
-  <div><p class="kicker">Access Credentials</p><h1>내부 토큰</h1><p class="module-description">호스트 진단 API 호출에 사용하는 내부 인증 토큰을 발급받습니다.</p></div>
-  <span class="page-tag"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>API 인증 관리</span>
+  <div><p class="kicker">Agent Status</p><h1>내부 토큰</h1><p class="module-description">내부 운영 에이전트의 서비스 상태를 확인합니다.</p></div>
+  <span class="page-tag"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>내부 에이전트</span>
 </header>
 <div class="tool-grid">
   <section class="card module">
-    <header><h2><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>진단 API 토큰</h2><span class="panel-meta">INTERNAL API</span></header>
+    <header><h2><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>에이전트 상태</h2><span class="panel-meta">INTERNAL API</span></header>
     <div class="card-body">
       <div class="tool-intro">
         <span class="metric-icon"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg></span>
-        <div><h3>운영 도구 인증 토큰</h3><p>토큰을 발급받으면 현재 로그인 세션에서 호스트 진단과 상황실 에이전트가 활성화됩니다.<br>로그아웃 후 다시 로그인하면 재발급이 필요합니다.</p></div>
+        <div><h3>운영 에이전트 연결 확인</h3><p>상태를 조회하면 현재 로그인 세션에서 호스트 진단과 상황실 에이전트가 활성화됩니다.<br>다시 로그인한 경우 상태를 다시 조회하세요.</p></div>
       </div>
-      <button class="btn primary" id="issue-token" type="button"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>토큰 발급</button>
+      <button class="btn primary" id="query-agent-status" type="button"><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg>에이전트 상태 조회</button>
     </div>
     <div class="result-section">
-      <div class="result-heading"><h3>발급 결과</h3><p id="token-status" role="status" aria-live="polite">대기</p></div>
-      <pre id="token-output" class="output" aria-label="발급 결과" hidden></pre>
+      <div class="result-heading"><h3>조회 결과</h3><p id="agent-status" role="status" aria-live="polite">대기</p></div>
+      <pre id="agent-status-output" class="output" aria-label="에이전트 상태 조회 결과" hidden></pre>
     </div>
   </section>
   <aside class="card">
     <header><h2>사용 정보</h2></header>
     <div class="card-body">
       <dl class="detail-list">
-        <div><dt>사용 대상</dt><dd>호스트 진단 API</dd></div>
-        <div><dt>인증 헤더</dt><dd><code>X-OpsWatch-Token</code></dd></div>
+        <div><dt>서비스</dt><dd>opswatch-agent</dd></div>
+        <div><dt>사용 도구</dt><dd>호스트 진단 · 상황실 에이전트</dd></div>
         <div><dt>요청 권한</dt><dd>로그인된 운영 계정</dd></div>
       </dl>
     </div>
@@ -36,5 +36,5 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="{% static 'opswatch/support.js' %}?v=20261116-issue-status"></script>
+<script src="{% static 'opswatch/support.js' %}?v=20261116-agent-status"></script>
 {% endblock %}

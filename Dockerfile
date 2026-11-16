@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 RUN groupadd --gid 1000 appuser \
     && useradd --uid 1000 --gid 1000 --home-dir /app --shell /usr/sbin/nologin appuser \
-    && mkdir -p /opt/challenge /app
+    && mkdir -p /app /opt/challenge
 
 WORKDIR /app
 

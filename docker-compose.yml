@@ -46,13 +46,13 @@ services:
       OPSWATCH_INTERNAL_TOKEN: ow-lab-internal-9f3c2a1b7e44
       OPSWATCH_RUNTIME: container
       OPSWATCH_ENABLE_DIAGNOSTICS: "1"
-    depends_on:
-      db:
-        condition: service_healthy
     extra_hosts:
       - "web-01.lab.local:10.32.0.11"
       - "db-01.lab.local:10.32.0.12"
       - "mon-01.lab.local:10.32.0.13"
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - lab
       - ingress

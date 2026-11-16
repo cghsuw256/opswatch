@@ -1,11 +1,11 @@
 # 취약점 원인과 개선
 
-이 문서는 OpsWatch 랩의 의도적 약점을 **고치는 방법**만 설명합니다.  
-랩 코드에 아래 패치를 적용하면 실습 시나리오가 깨집니다.
+이 문서는 OpsWatch 랩의 의도적 약점을 **고치는 방법**만 설명합니다.
+기존 로그인·상태 조회·진단 화면은 취약점 시연을 위해 의도적으로 취약한 상태로 둡니다. 아래는 시연 후 설명할 수정 방안이며, 별도 안전 모드나 발표 화면은 없습니다.
 
 ## 1. 직원 안내에서 콘솔 ID 노출
 
-**원인:** 인증 없는 `/staff/` 가 유지보수 로그인 ID를 그대로 렌더링합니다.  
+**원인:** 인증 없는 `/staff/`가 유지보수 로그인 ID를 그대로 렌더링합니다.
 `inventory/templates/inventory/staff.html`, 시드의 `Employee.login_id`.
 
 **개선:**
@@ -19,16 +19,14 @@
 
 **개선:**
 
-- Django 기본 `AUTH_PASSWORD_VALIDATORS` 를 켜고 길이·복잡도를 강제합니다.
+- Django 기본 `AUTH_PASSWORD_VALIDATORS`를 켜고 길이·복잡도를 강제합니다.
 - `django-axes` 또는 캐시 카운터로 실패 N회 후 잠금·지연을 넣습니다.
 - 초기 비밀번호는 일회용으로 발급하고 재설정을 강제합니다.
 - 가능하면 SSO/패스키를 사용합니다.
 
-## 3. 고정 토큰을 발급처럼 반환
+## 3. 정상 상태 응답에 고정 토큰 포함
 
-**원인:** `/api/internal/token/` 이 인증된 사용자에게 `settings.OPSWATCH_INTERNAL_TOKEN` 고정값을 그대로 줍니다. 만료·회전·사용자 바인딩이 없습니다.
-
-랩의 진단 화면은 토큰 발급 시 Django 세션에 저장한 값으로 활성화되며, 로그아웃하면 다시 비활성화됩니다. 화면 활성화 절차와 별개로 API는 그 세션을 검사하지 않으므로, 확보한 고정 토큰을 Burp Suite에서 세션 없이 재사용할 수 있습니다.
+**원인:** 기존 내부 토큰 화면의 상태 조회가 호출하는 `GET /api/internal/metadata/`가 인증된 사용자에게 `settings.OPSWATCH_INTERNAL_TOKEN`을 JSON에 넣습니다. 화면에는 상태만 표시하지만 네트워크 응답에서 토큰을 읽을 수 있습니다. 만료·회전·사용자 바인딩이 없습니다.
 
 **개선:**
 
@@ -39,9 +37,9 @@
 
 ## 4. 정적 토큰만으로 진단 API가 열림
 
-**원인:** `/api/internal/diagnose/` 가 세션·CSRF를 보지 않고 고정 토큰만 확인합니다. 토큰이 유출되면 로그인 없이 명령 실행 경로가 열립니다.
+**원인:** `/api/internal/diagnose/`가 세션·CSRF를 보지 않고 고정 토큰만 확인합니다. 토큰이 유출되면 로그인 없이 진단 경로가 열립니다.
 
-`/api/internal/assistant/` 도 같은 고정 토큰만 확인합니다. 상황실 에이전트는 별도 명령을 만들지 않고 운영자가 입력한 대상을 `run_ping_diagnosis()`에 그대로 넘기므로, 토큰이 유출되면 진단 API와 같은 실행 경로가 자동화 화면에도 열립니다.
+`/api/internal/assistant/`도 같은 고정 토큰만 확인합니다. 상황실 에이전트는 별도 명령을 만들지 않고 운영자가 입력한 대상을 `run_ping_diagnosis()`에 그대로 넘깁니다.
 
 **개선:**
 
@@ -50,47 +48,28 @@
 - 고정 공유 시크릿으로 관리 동작을 인가하지 않습니다.
 - 관리 동작은 감사 로그와 2차 확인.
 
-## 5. 셸 문자열 결합 (Command Injection)
+## 5. 명령 문자열 결합 (Command Injection)
 
-**원인:** `inventory/services/diagnostics.py`
-
-```python
-command = f"/usr/bin/getent hosts {target}"
-subprocess.run(command, shell=True, ...)
-```
-
-사용자 입력이 셸 메타문자(`;`, `|`, `$()`, 백틱 등)로 추가 명령을 만듭니다.
+**원인:** `inventory/services/diagnostics.py`의 `run_ping_diagnosis()`가 입력을 `f"/usr/bin/getent hosts {cleaned}"`에 결합하여 `subprocess.run(..., shell=True)`로 실제 실행합니다. `;`/`&&` 같은 셸 메타문자가 추가 명령으로 해석됩니다. 이 경로는 격리 컨테이너에서만 활성화되지만, 격리는 취약점 수정의 대체가 아닙니다.
 
 **개선 (필수):**
 
-1. `shell=False` 로 인자 리스트만 전달합니다.
-
-```python
-subprocess.run(
-    ["/usr/bin/getent", "hosts", target],
-    shell=False,
-    check=False,
-    capture_output=True,
-    timeout=3,
-)
-```
-
+1. 셸 실행 경로 자체를 제거합니다. 진단은 ORM 조회나 안전한 라이브러리만 사용합니다.
 2. 진단 대상을 허용 목록으로만 받습니다. 예: `Server.hostname` 쿼리 결과와 일치하는 값만.
-3. 호스트명 정규식(`^[a-z0-9.-]+$`)을 통과해도 허용 목록이 없으면 거절합니다.
-4. 컨테이너에서도 이 API를 기본 비활성화하고, 별도 읽기 전용 진단 바이너리를 둡니다.
-5. 타임아웃·출력 상한·동시성 제한은 유지하되, 취약점의 대체가 아닙니다.
+3. 호스트명 정규식을 통과해도 허용 목록이 없으면 거절합니다.
+4. 외부 네트워크 진단이 필요하면 인자 리스트와 `shell=False`만 사용하고, 사용자 입력을 명령 문자열에 넣지 않습니다.
 
 ## 6. 출력 XSS
 
-랩은 JSON → `textContent` 로 결과를 넣습니다. 이 부분은 유지하세요.  
-`innerHTML` 이나 `|safe` 로 진단 출력을 넣지 마세요.
+랩은 JSON → `textContent`로 결과를 넣습니다. 이 부분은 유지하세요.
+`innerHTML`이나 `|safe`로 진단 출력을 넣지 마세요.
 
 ## 체크리스트
 
 - [ ] 강한 비밀번호 정책
 - [ ] 로그인 시도 제한
 - [ ] 비밀정보는 코드·정적 파일 밖
-- [ ] 셸 사용 금지, 인자 분리 실행
-- [ ] 허용된 진단 대상만 실행
+- [ ] 셸 사용 금지
+- [ ] 허용된 진단 대상만 조회
 - [ ] 관리 API와 Django Admin 권한 분리
 - [ ] 로컬 바인딩·비특권 컨테이너는 방어 계층이지 앱 버그의 면책이 아님
