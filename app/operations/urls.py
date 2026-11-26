@@ -1,6 +1,7 @@
 from django.urls import path
 
 from operations import views
+from operations.admin_settings import admin_settings
 from operations.overview import dashboard
 
 urlpatterns = [
@@ -9,7 +10,7 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("dashboard/", dashboard, name="dashboard"),
     path("support/", views.support, name="support"),
-    path("dev/setting", views.demo_token_settings, name="demo_token_settings"),
+    path("admin/setting", admin_settings, name="admin_settings"),
     path("api/internal/metadata/", views.metadata_api, name="metadata_api"),
     path("admin/diagnostics/", views.diagnostics_page, name="diagnostics"),
     path("api/internal/diagnose/", views.diagnose_api, name="diagnose_api"),

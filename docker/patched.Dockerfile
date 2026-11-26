@@ -19,7 +19,7 @@ COPY app/manage.py ./
 COPY app/config/__init__.py app/config/common.py app/config/patched.py app/config/patched_urls.py app/config/wsgi.py ./config/
 COPY app/unit_portal/ ./unit_portal/
 COPY app/patched_portal/ ./patched_portal/
-COPY app/operations/__init__.py app/operations/apps.py app/operations/charts.py app/operations/models.py app/operations/overview.py ./operations/
+COPY app/operations/__init__.py app/operations/admin_settings.py app/operations/apps.py app/operations/charts.py app/operations/models.py app/operations/overview.py ./operations/
 COPY app/operations/migrations/ ./operations/migrations/
 COPY app/operations/templates/inventory/base.html app/operations/templates/inventory/login.html app/operations/templates/inventory/dashboard.html app/operations/templates/inventory/staff.html ./operations/templates/inventory/
 COPY app/operations/static/opswatch/app.css app/operations/static/opswatch/dashboard.js ./operations/static/opswatch/

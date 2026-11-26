@@ -35,6 +35,19 @@ class PatchedSiteTests(TestCase):
                 self.assertEqual(self.client.get(path).status_code, 404)
                 self.assertEqual(self.client.post(path).status_code, 404)
 
+    def test_settings_exposes_only_database_engine_to_portal_admin(self):
+        path = "/admin/setting"
+        self.assertRedirects(self.client.get(path), "/login/?next=/admin/setting")
+        self.client.force_login(self.operator)
+        self.assertEqual(self.client.get(path).status_code, 403)
+        profile = self.operator.profile
+        profile.role = "admin"
+        profile.save(update_fields=["role"])
+        response = self.client.get(path)
+        self.assertEqual(response.json(), {"database": {"engine": "sqlite3"}})
+        self.assertIn("no-store", response["Cache-Control"])
+        self.assertEqual(self.client.post(path).status_code, 405)
+
     def test_public_directory_keeps_rank_but_not_authentication_fields(self):
         Employee.objects.create(name="정지훈", department="운영", title="중사", extension="4511",
                                 login_id="private-user-id", duty="private staff note",
