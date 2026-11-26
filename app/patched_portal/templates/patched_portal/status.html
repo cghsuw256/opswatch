@@ -1,0 +1,23 @@
+{% extends "inventory/base.html" %}
+{% block page_name %}서비스 상태{% endblock %}
+{% block content %}
+<header class="module-head">
+  <div><p class="kicker">Service Status</p><h1>서비스 상태</h1></div>
+</header>
+<section class="card module">
+  <header><h2>등록 호스트 상태</h2></header>
+  <div class="table-scroll">
+    <table class="data">
+      <thead><tr><th scope="col">호스트</th><th scope="col">최근 저장 상태</th></tr></thead>
+      <tbody>
+        {% for server in servers %}
+        <tr><td>{{ server.hostname }}</td><td><span class="status-label {{ server.status }}">{{ server.get_status_display }}</span></td></tr>
+        {% empty %}
+        <tr><td colspan="2">등록된 호스트가 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <footer class="panel-footer"><a href="{% url 'dashboard' %}">운영 개요로 이동 →</a></footer>
+</section>
+{% endblock %}

@@ -2,8 +2,21 @@
 {% block title %}부대원 · 국방망 인트라넷{% endblock %}
 {% block page_name %}부대원{% endblock %}
 {% block intranet_heading %}부대원 <span class="count-badge">{{ people|length }}명</span>{% endblock %}
-{% block intranet_description %}소속별 부대원과 연락처를 찾습니다.{% endblock %}
+{% block intranet_description %}{% if patched_site %}소속별 군인·군무원의 계급·직급과 연락처를 찾습니다.{% else %}소속별 부대원과 연락처를 찾습니다.{% endif %}{% endblock %}
 {% block intranet_content %}
-<div class="intra-toolbar"><nav class="intra-tabs" aria-label="소속 필터"><a href="{% url 'intranet:people' %}?q={{ q|urlencode }}" class="btn{% if not dept %} primary{% endif %}"{% if not dept %} aria-current="page"{% endif %}>전체</a>{% for item in departments %}<a href="{% url 'intranet:people' %}?dept={{ item|urlencode }}&amp;q={{ q|urlencode }}" class="btn{% if dept == item %} primary{% endif %}"{% if dept == item %} aria-current="page"{% endif %}>{{ item }}</a>{% endfor %}</nav><form class="intra-row" method="get" action="{% url 'intranet:people' %}" role="search"><input type="hidden" name="dept" value="{{ dept }}"><label for="people-search" class="sr-only">이름·계급·메일 검색</label><input id="people-search" name="q" value="{{ q }}" placeholder="이름·계급·메일 검색" maxlength="30"><button type="submit">검색</button></form></div>
+<div class="intra-toolbar">
+  <nav class="intra-tabs" aria-label="소속 필터"><a href="{% url 'intranet:people' %}?q={{ q|urlencode }}" class="btn{% if not dept %} primary{% endif %}"{% if not dept %} aria-current="page"{% endif %}>전체</a>{% for item in departments %}<a href="{% url 'intranet:people' %}?dept={{ item|urlencode }}&amp;q={{ q|urlencode }}" class="btn{% if dept == item %} primary{% endif %}"{% if dept == item %} aria-current="page"{% endif %}>{{ item }}</a>{% endfor %}</nav>
+  <form class="intra-row" method="get" action="{% url 'intranet:people' %}" role="search">
+    <input type="hidden" name="dept" value="{{ dept }}">
+    {% if patched_site %}
+      <label for="people-search" class="sr-only">이름·계급·직급·메일 검색</label>
+      <input id="people-search" name="q" value="{{ q }}" placeholder="이름·계급·직급·메일 검색" maxlength="30">
+    {% else %}
+      <label for="people-search" class="sr-only">이름·계급·메일 검색</label>
+      <input id="people-search" name="q" value="{{ q }}" placeholder="이름·계급·메일 검색" maxlength="30">
+    {% endif %}
+    <button type="submit">검색</button>
+  </form>
+</div>
 <div class="intra-people">{% for person in people %}<article class="card intra-person"><span class="intra-avatar" aria-hidden="true">{{ person.name|slice:":1" }}</span><h2><small>{{ person.title }}</small> {{ person.name|default:person.user.username }}</h2><span class="intra-tag">{{ person.dept }}</span><dl class="detail-list"><div><dt>메일</dt><dd>{% if person.email %}<a href="mailto:{{ person.email }}">{{ person.email }}</a>{% else %}미등록{% endif %}</dd></div><div><dt>휴대폰</dt><dd>{{ person.phone|default:"미등록" }}</dd></div><div><dt>군 전화</dt><dd>{{ person.ext|default:"미등록" }}</dd></div><div><dt>전입일</dt><dd>{{ person.joined|date:"Y-m-d"|default:"미등록" }}</dd></div></dl></article>{% empty %}<p class="intra-empty">검색 결과가 없습니다.</p>{% endfor %}</div>
 {% endblock %}

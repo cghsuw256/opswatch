@@ -30,7 +30,7 @@
   <aside class="mast" aria-label="주 메뉴">
     <a class="brand" href="{% if user.is_authenticated %}{% url 'intranet:home' %}{% else %}{% url 'staff' %}{% endif %}">
       <span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span>
-      <span><strong>국방망 인트라넷</strong><small>NETWORK OPERATIONS</small></span>
+      <span><strong>국방망 인트라넷</strong><small>{% if patched_site %}신규 시스템{% else %}NETWORK OPERATIONS{% endif %}</small></span>
     </a>
     {% if user.is_authenticated %}
     <p class="nav-section">UNIT INTRANET</p>
@@ -48,10 +48,12 @@
     <nav class="shell-secondary" aria-label="운영 관리 세부 메뉴">
       <a class="{% if request.path == '/dashboard/' %}active{% endif %}" {% if request.path == '/dashboard/' %}aria-current="page"{% endif %} href="{% url 'dashboard' %}">운영 개요</a>
       <a class="{% if request.path == '/staff/' %}active{% endif %}" {% if request.path == '/staff/' %}aria-current="page"{% endif %} href="{% url 'staff' %}">당직 연락망</a>
-      <a class="{% if request.path == '/support/' %}active{% endif %}" {% if request.path == '/support/' %}aria-current="page"{% endif %} href="{% url 'support' %}">내부 토큰</a>
+      <a class="{% if request.path == '/support/' %}active{% endif %}" {% if request.path == '/support/' %}aria-current="page"{% endif %} href="{% url 'support' %}">{% if patched_site %}서비스 상태{% else %}내부 토큰{% endif %}</a>
       {% if perms.inventory.run_diagnostics %}
       <a class="{% if '/admin/diagnostics/' in request.path %}active{% endif %}" {% if '/admin/diagnostics/' in request.path %}aria-current="page"{% endif %} href="{% url 'diagnostics' %}">호스트 진단</a>
+      {% if not patched_site %}
       <a class="{% if '/ops/assistant/' in request.path %}active{% endif %}" {% if '/ops/assistant/' in request.path %}aria-current="page"{% endif %} href="{% url 'assistant' %}">상황실 에이전트</a>
+      {% endif %}
       {% endif %}
     </nav>
     {% endif %}

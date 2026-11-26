@@ -10,8 +10,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from operations.charts import alert_evolution
-from operations.models import Employee, Inspection, Server
+from operations.models import Employee
 from operations.services.diagnostics import (
     DiagnosticsBusy,
     DiagnosticsDisabled,
@@ -54,30 +53,6 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect("login")
-
-
-@require_GET
-def dashboard(request):
-    if not request.user.is_authenticated:
-        return redirect("login")
-    servers = list(Server.objects.all())
-    inspections = list(Inspection.objects.select_related("server")[:12])
-    return render(
-        request,
-        "inventory/dashboard.html",
-        {
-            "servers": servers,
-            "inspections": inspections,
-            "seed_metrics": any(server.seed_metrics for server in servers),
-            "alert_chart": alert_evolution(servers),
-            "agent_total": len(servers),
-            "agent_warn": sum(server.status == Server.STATUS_WARN for server in servers),
-            "agent_ok": sum(server.status == Server.STATUS_OK for server in servers),
-            "agent_down": sum(server.status == Server.STATUS_DOWN for server in servers),
-            "inspection_passed": sum(row.passed for row in inspections),
-            "inspection_failed": sum(not row.passed for row in inspections),
-        },
-    )
 
 
 @require_GET

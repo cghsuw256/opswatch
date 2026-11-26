@@ -1,41 +1,44 @@
 # 국방망 인트라넷
 
-로컬에서만 사용하는 **의도적으로 취약한 교육용** Django MTV 웹 애플리케이션입니다.
-실제 국방망, 공인 주소, 외부 시스템, 운영 자격 증명을 대상으로 하지 않습니다.
+로컬 교육 환경입니다. 신규 시스템으로 이관한 뒤 담당자가 구형 홈페이지를 종료하지 않아, 실습 대상은 남아 있는 레거시 사이트입니다. 실제 국방망이나 외부 시스템에는 배포하지 않습니다.
 
-- 공개 포트: `127.0.0.1:8000` 만 바인딩
-- 계정·토큰·FLAG: 전부 실습용 가짜 값
-- 셸 진단: **격리된 실습 컨테이너 안에서만** 실제 실행
-- 화면 구성: 로그인 후 부대 인트라넷 홈, 공지사항·게시판·결재·일정·부대원·내 정보. 망운용 화면은 **운영 관리** 탭에서 접근
+| 구분 | 접속 주소 | 데이터 |
+| --- | --- | --- |
+| 신규 국방망 인트라넷 | [http://intranet.localhost:8001/](http://intranet.localhost:8001/) | 독립 SQLite 볼륨, 신규 발급 계정 |
+| 레거시 실습 사이트 | [http://127.0.0.1:8000/](http://127.0.0.1:8000/) | 기존 MySQL 볼륨, 실습 계정 |
 
-학습자는 가능하면 이 README의 계정 표를 보지 말고 `/staff/`부터 시작해도 됩니다.
+### 신규 시스템 실행과 계정 발급
 
-## 시나리오
+```powershell
+docker compose -f docker-compose.patched.yml up -d --build --wait
+docker compose -f docker-compose.patched.yml exec web python manage.py create_operator duty01 --name "김준호" --rank "중사" --diagnostics
+docker compose -f docker-compose.patched.yml exec web python manage.py create_operator support01 --name "박서윤" --rank "7급 군무원"
+```
 
-1. 로그인에 반복 시도 제한이 없고, 약한 실습 비밀번호(`maint123`)를 허용한다.
-2. 로그인 사용자에게 제공되는 정상 에이전트 상태 API 응답 JSON에 고정된 가짜 내부 토큰이 평문으로 포함된다.
-3. `maint`의 로그인 세션과 `inventory.run_diagnostics` 권한, 노출된 토큰을 함께 사용해 `/api/internal/diagnose/`를 호출한다. 토큰만으로는 실행할 수 없다.
-4. 기존 호스트 진단 화면에 `;`/`&&`를 포함한 입력을 넣어 컨테이너 내부의 실제 명령 실행을 확인한다.
-5. 시연한 코드의 인증·비밀번호·토큰·입력 검증 문제와 대응 방안을 설명한다. 방어 대책은 [`docs/SECURE_CODING.md`](docs/SECURE_CODING.md)에 정리되어 있다.
+- 비밀번호는 터미널 프롬프트에서 두 번 입력합니다. 초기 계정이나 레거시 계정·데이터 자동 이관은 없습니다. 포털 관리 역할은 `--portal-admin`, 호스트 점검 기록 조회 권한은 `--diagnostics`로 각각 부여합니다.
+- [군인사법 제3조](https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1029126493)의 군인 계급과 [군무원인사법 제3조](https://www.law.go.kr/LSW/lsLawLinkInfo.do?lsJoLnkSeq=900324816&chrClsCd=010202)의 일반군무원 1~9급을 사용합니다. 홈, 부대원, 내 정보, 결재선, 당직 연락망에서 계급·직급을 표시합니다.
+- 공지사항·게시판·결재·일정 등 기존 업무 화면은 유지합니다. 공개 연락망에서 콘솔 ID를 빼고, 개발 설정·내부 토큰·기존 실행 API와 에이전트는 신규 사이트에 연결하지 않습니다. 서비스 상태와 호스트 진단은 DB에 저장된 상태·기록만 조회합니다.
+- 신규 로그인은 출발지당 60초 구간에 최대 10회, 비밀번호는 최소 14자와 Django 검증 정책을 적용합니다. 신규 사이트 주소는 `intranet.localhost`를 사용하세요. 별도 호스트와 쿠키, 별도 DB·서명 키를 사용하며 둘 다 로컬에만 바인딩합니다.
 
-별도 발표 화면이나 취약/안전 모드 전환은 없습니다. 기존 화면에서 직접 입력하며 진행하는 순서는 [`docs/WALKTHROUGH.md`](docs/WALKTHROUGH.md)입니다.
+레거시 진행 자료: [`docs/WALKTHROUGH.md`](docs/WALKTHROUGH.md). 신규·레거시 방어 비교: [`docs/SECURE_CODING.md`](docs/SECURE_CODING.md).
 
 ## 폴더 구조
 
 | 위치 | 역할 |
 | --- | --- |
 | `app/` | Django 실행 파일과 Python 의존성 |
-| `app/config/` | 프로젝트 설정, 루트 URL, WSGI |
+| `app/config/` | 공통 Django 설정, 레거시·신규별 설정과 루트 URL, WSGI |
 | `app/unit_portal/` | 부대 업무 앱 |
 | `app/operations/` | 운영 관리 앱과 실습 시드 |
+| `app/patched_portal/` | 신규 로그인 정책, 계급·직급, 안전한 운영 화면 |
 | `docker/` | Dockerfile, 시작 스크립트, 컨테이너 실습 리소스 |
 | `docs/` | 실습 절차와 보안 개선안 |
 
 Django 앱 레이블 `intranet`, `inventory`는 유지하므로 기존 DB 테이블과 권한을 그대로 사용합니다.
 
-Django 관리자 사이트는 연결하지 않습니다. `/admin/diagnostics/`는 실습용 진단 화면입니다.
+Django 관리자 사이트는 연결하지 않습니다. `/admin/diagnostics/`는 같은 경로를 사용하지만, 신규에서는 저장된 점검 기록만 조회합니다.
 
-## 필수 격리
+## 레거시 실습 환경 격리
 
 Docker Compose는 아래를 강제합니다.
 
@@ -50,7 +53,7 @@ Docker Compose는 아래를 강제합니다.
 
 컨테이너 격리는 커널 네임스페이스 수준입니다. 호스트 탈출·도커 소켓 실습은 이 프로젝트의 범위가 아닙니다. **가능하면 별도 실습 VM에서 실행하세요.**
 
-## 설치와 실행
+## 레거시 설치와 실행
 
 요구: Docker Compose v2, 로컬 전용.
 
@@ -93,7 +96,7 @@ $env:OPSWATCH_DATABASE = "sqlite"
 .\.venv\Scripts\python app/manage.py runserver 127.0.0.1:8000
 ```
 
-## 실습 계정 (가짜)
+## 레거시 실습 계정 (가짜)
 
 운영자용입니다. 기존 로그인 화면에서 `maint` / `maint123` 로그인을 시연합니다.
 
@@ -114,10 +117,12 @@ $env:OPSWATCH_DATABASE = "sqlite"
 
 ## 변경사항
 
+- 신규 국방망 인트라넷을 별도의 Compose 프로젝트로 분리했습니다. 레거시 경로와 데이터 볼륨은 그대로 유지합니다.
+
 - 호스트 진단·상황실 에이전트 실행을 Django의 `inventory.run_diagnostics` 권한으로 분리했습니다. 기본 시드는 `maint`만 허용하며, 다른 시드·이관 계정과 인트라넷 관리자 역할은 기본적으로 허용하지 않습니다.
 - 화면과 API 모두 로그인·권한을 요구하도록 변경했습니다. 고정 토큰만으로 세션 없이 실행하던 경로는 더 이상 허용하지 않습니다. 로그인 사용자 대상 메타데이터 토큰 노출, API CSRF 면제, 셸 명령 삽입은 교육 목적으로 유지합니다.
 
-## 종료 · 재시작 · 초기화
+## 레거시 종료 · 재시작 · 초기화
 
 ```powershell
 docker compose stop          # 종료, 볼륨 유지
@@ -137,6 +142,15 @@ docker compose up --build    # 다시 시드
 호스트 SQLite를 썼다면 `db.sqlite3`를 지운 뒤 `migrate` + `seed_lab`을 다시 실행합니다.
 
 ## 테스트
+
+신규 사이트 검증:
+
+```powershell
+docker compose -f docker-compose.patched.yml exec web python manage.py test patched_portal
+docker compose -f docker-compose.patched.yml exec web python manage.py migrate --check
+```
+
+레거시 사이트 검증:
 
 ```powershell
 $env:OPSWATCH_DATABASE = "sqlite"

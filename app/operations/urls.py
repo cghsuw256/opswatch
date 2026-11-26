@@ -1,12 +1,13 @@
 from django.urls import path
 
 from operations import views
+from operations.overview import dashboard
 
 urlpatterns = [
     path("staff/", views.staff, name="staff"),
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
-    path("dashboard/", views.dashboard, name="dashboard"),
+    path("dashboard/", dashboard, name="dashboard"),
     path("support/", views.support, name="support"),
     path("dev/setting", views.demo_token_settings, name="demo_token_settings"),
     path("api/internal/metadata/", views.metadata_api, name="metadata_api"),

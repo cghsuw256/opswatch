@@ -8,5 +8,6 @@ __pycache__
 *.md
 docs
 .env
+.patched-data
 .pytest_cache
 staticfiles

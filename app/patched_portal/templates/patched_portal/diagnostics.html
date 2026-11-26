@@ -1,0 +1,35 @@
+{% extends "inventory/base.html" %}
+{% block title %}호스트 진단 · 국방망 인트라넷{% endblock %}
+{% block page_name %}호스트 진단{% endblock %}
+{% block content %}
+<header class="module-head">
+  <div><p class="kicker">Host Diagnostics</p><h1>호스트 진단</h1>
+  <p class="module-description">등록된 호스트의 상태와 최근 점검 기록을 조회합니다. 실시간 네트워크 명령은 실행하지 않습니다.</p></div>
+</header>
+<div class="module-grid">
+  <section class="card module">
+    <header><h2>조회 대상</h2></header>
+    <div class="card-body">
+      <form method="post" action="{% url 'diagnostics' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button class="btn primary" type="submit">점검 기록 조회</button>
+      </form>
+    </div>
+  </section>
+  {% if server %}
+  <section class="card module" aria-labelledby="result-title">
+    <header><h2 id="result-title">{{ server.hostname }}</h2><span class="status-label {{ server.status }}">{{ server.get_status_display }}</span></header>
+    <div class="card-body">
+      {% if inspection %}
+        <p><time datetime="{{ inspection.inspected_at|date:'c' }}">{{ inspection.inspected_at|date:'Y-m-d H:i' }}</time> · {% if inspection.passed %}통과{% else %}미통과{% endif %}</p>
+        <p><strong>{{ inspection.summary }}</strong></p>
+        <p>{{ inspection.detail }}</p>
+      {% else %}
+        <p>저장된 점검 기록이 없습니다.</p>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
