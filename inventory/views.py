@@ -90,12 +90,20 @@ def support(request):
 @never_cache
 @require_GET
 def demo_token_settings(request):
-    # This example token is not accepted by any API.
     return JsonResponse(
         {
-            "internal_token": "opswatch-demo-token-not-valid",
-            "authentication": "static-token",
-            "expires_in": None,
+            "database": {
+                "engine": "postgresql",
+                "host": "db.example.invalid",
+                "port": 5432,
+                "name": "opswatch_demo",
+                "username": "opswatch_demo",
+                "password": "demo-db-password-not-valid",
+            },
+            "maintenance_account": {
+                "username": "maint",
+                "password": "demo-maint-password-not-valid",
+            },
             "demo_only": True,
         }
     )
