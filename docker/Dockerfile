@@ -8,13 +8,14 @@ RUN groupadd --gid 1000 appuser \
     && useradd --uid 1000 --gid 1000 --home-dir /app --shell /usr/sbin/nologin appuser \
     && mkdir -p /app /opt/challenge
 
-WORKDIR /app
+WORKDIR /app/app
 
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+COPY app/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY --chown=appuser:appuser . /app
-COPY challenge/flag.txt /opt/challenge/flag.txt
+COPY --chown=appuser:appuser app/ ./
+COPY docker/entrypoint.sh /app/docker/entrypoint.sh
+COPY docker/challenge/flag.txt /opt/challenge/flag.txt
 
 RUN chmod 755 /app/docker/entrypoint.sh \
     && chmod 444 /opt/challenge/flag.txt \

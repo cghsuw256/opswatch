@@ -20,19 +20,16 @@
 
 별도 발표 화면이나 취약/안전 모드 전환은 없습니다. 기존 화면에서 직접 입력하며 진행하는 순서는 [`docs/WALKTHROUGH.md`](docs/WALKTHROUGH.md)입니다.
 
-## MTV 구조
+## 폴더 구조
 
-| 역할 | 위치 | 책임 |
-| --- | --- | --- |
-| Model | `inventory/models.py` | 직원, 서버, 점검 기록 |
-| Template | `inventory/templates/inventory/` | 로그인, 직원 안내, 대시보드, 지원, 진단, 에이전트 |
-| View | `inventory/views.py` | 요청, 인증 확인, 렌더링, JSON |
-| URLconf | `opswatch/urls.py`, `inventory/urls.py` | 페이지·API 경로 |
-| Service | `inventory/services/diagnostics.py` | 컨테이너 전용 실제 셸 실행과 호스트 보고서 |
-| Management | `inventory/management/commands/seed_lab.py` | 멱등 시드 |
-| Intranet | `intranet/` | 부대 업무 모델·폼·뷰·공통 디자인 템플릿 |
-
-현재 서비스는 `opswatch/`(프로젝트 설정), `intranet/`(부대 업무), `inventory/`(운영 관리)로 구성됩니다. `docker/`는 컨테이너 초기화 스크립트, `docs/`는 실습 문서입니다.
+| 위치 | 역할 |
+| --- | --- |
+| `app/` | Django 실행 파일과 Python 의존성 |
+| `app/opswatch/` | 프로젝트 설정, 루트 URL, WSGI |
+| `app/intranet/` | 부대 업무 앱 |
+| `app/inventory/` | 운영 관리 앱과 실습 시드 |
+| `docker/` | Dockerfile, 시작 스크립트, 컨테이너 실습 리소스 |
+| `docs/` | 실습 절차와 보안 개선안 |
 
 Django 관리자 사이트는 연결하지 않습니다. `/admin/diagnostics/`는 실습용 진단 화면입니다.
 
@@ -85,11 +82,11 @@ MySQL이 healthy가 된 뒤 엔트리포인트가 `migrate`와 `seed_lab`을 실
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\pip install -r requirements.txt
+.\.venv\Scripts\pip install -r app/requirements.txt
 $env:OPSWATCH_DATABASE = "sqlite"
-.\.venv\Scripts\python manage.py migrate
-.\.venv\Scripts\python manage.py seed_lab
-.\.venv\Scripts\python manage.py runserver 127.0.0.1:8000
+.\.venv\Scripts\python app/manage.py migrate
+.\.venv\Scripts\python app/manage.py seed_lab
+.\.venv\Scripts\python app/manage.py runserver 127.0.0.1:8000
 ```
 
 ## 실습 계정 (가짜)
@@ -109,7 +106,7 @@ $env:OPSWATCH_DATABASE = "sqlite"
 - 상태 조회는 현재 세션에 토큰을 저장합니다. 진단·에이전트 메뉴는 `inventory.run_diagnostics` 권한이 있을 때만 표시되며, 일반 계정은 토큰을 받아도 실행할 수 없습니다. 로그아웃하면 다시 조회해야 합니다.
 - 진단·에이전트 페이지는 비로그인 시 로그인으로 이동하고, 로그인했지만 권한이 없으면 403입니다. 두 실행 API는 로그인 세션(없으면 401), 진단 권한(없으면 403), 기존 토큰 검사를 순서대로 요구합니다.
 - 두 실행 API의 CSRF 면제(`csrf_exempt`)와 교육용 고정 토큰 노출·셸 명령 삽입 취약점은 유지됩니다. 권한 구분은 이 취약점들을 제거한 것이 아닙니다.
-- FLAG: 컨테이너 `/opt/challenge/flag.txt`의 실제 실습 파일 (`challenge/flag.txt`에서 이미지에 복사)
+- FLAG: 컨테이너 `/opt/challenge/flag.txt`의 실제 실습 파일 (`docker/challenge/flag.txt`에서 이미지에 복사)
 
 ## 변경사항
 
@@ -139,9 +136,9 @@ docker compose up --build    # 다시 시드
 
 ```powershell
 $env:OPSWATCH_DATABASE = "sqlite"
-.\.venv\Scripts\python manage.py check
-.\.venv\Scripts\python manage.py makemigrations --check --dry-run
-.\.venv\Scripts\python manage.py test
+.\.venv\Scripts\python app/manage.py check
+.\.venv\Scripts\python app/manage.py makemigrations --check --dry-run
+.\.venv\Scripts\python app/manage.py test intranet inventory
 ```
 
 호스트 단위 테스트는 `subprocess`를 모의하고 런타임 차단·입력 오류·출력 상한·타임아웃을 확인합니다. 실제 셸 동작은 격리된 컨테이너의 기존 진단·에이전트 화면에서 확인합니다.

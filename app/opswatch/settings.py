@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 
 # Lab-only default. Override in Compose. Never use this value outside the exercise.
 SECRET_KEY = os.environ.get(
