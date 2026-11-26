@@ -31,7 +31,6 @@
 | Service | `inventory/services/diagnostics.py` | 컨테이너 전용 실제 셸 실행과 호스트 보고서 |
 | Management | `inventory/management/commands/seed_lab.py` | 멱등 시드 |
 | Intranet | `intranet/` | 부대 업무 모델·폼·뷰·공통 디자인 템플릿 |
-| Import | `intranet/management/commands/import_intranet.py` | 원본 SQLite 데이터의 멱등 이관 |
 
 현재 서비스는 `opswatch/`(프로젝트 설정), `intranet/`(부대 업무), `inventory/`(운영 관리)로 구성됩니다. `docker/`는 컨테이너 초기화 스크립트, `docs/`는 실습 문서입니다.
 
@@ -70,14 +69,6 @@ MySQL이 healthy가 된 뒤 엔트리포인트가 `migrate`와 `seed_lab`을 실
 - **인트라넷**: 홈, 공지사항, 게시판(검색·분류·댓글), 결재(받은 문서·내 기안), 일정(공통·개인), 부대원, 내 정보·비밀번호 변경.
 - **운영 관리**: 기존 운영 개요(`/dashboard/`), 당직 연락망, 내부 토큰, 호스트 진단, 상황실 에이전트. 인트라넷과 같은 Django 로그인 세션·메뉴·색상·컴포넌트를 사용합니다.
 - 인트라넷 관리자는 공지 작성·삭제와 공통 일정 등록이 가능합니다. 일반 사용자는 본인 게시글·일정만 삭제하고, 결재는 기안자·지정 결재자·인트라넷 관리자만 열람합니다. 승인·반려는 지정 결재자만 한 번 처리할 수 있습니다. 인트라넷 관리자 역할은 Django 관리자 권한이나 호스트 진단 권한을 부여하지 않습니다.
-
-별도로 보관한 원본 SQLite 파일이 있으면 수동 이관할 수 있습니다.
-
-```powershell
-.\.venv\Scripts\python manage.py import_intranet --source "경로\intranet.db"
-```
-
-이관 ID 매핑은 한 원본 DB 기준입니다. 다른 ID 체계의 DB를 같은 대상 DB에 추가 병합하는 용도로 사용하지 마세요.
 
 ### 운영 개요의 실습 데이터
 
