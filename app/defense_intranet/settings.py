@@ -1,4 +1,4 @@
-"""OpsWatch lab settings. All secrets here are fake and local-only."""
+"""Defense intranet lab settings. All secrets here are fake and local-only."""
 
 import os
 import sys
@@ -36,8 +36,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "opswatch.urls"
-WSGI_APPLICATION = "opswatch.wsgi.application"
+ROOT_URLCONF = "defense_intranet.urls"
+WSGI_APPLICATION = "defense_intranet.wsgi.application"
 
 TEMPLATES = [
     {

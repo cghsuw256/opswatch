@@ -56,13 +56,13 @@
     </nav>
     {% endif %}
     {% else %}
-    <p class="nav-section">OPSWATCH</p>
+    <p class="nav-section">국방망 인트라넷</p>
     <nav aria-label="공개 메뉴">
       <a class="{% if request.path == '/staff/' %}active{% endif %}" {% if request.path == '/staff/' %}aria-current="page"{% endif %} href="{% url 'staff' %}"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>당직 연락망</a>
       <a class="{% if request.path == '/login/' %}active{% endif %}" {% if request.path == '/login/' %}aria-current="page"{% endif %} href="{% url 'login' %}"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg>로그인</a>
     </nav>
     {% endif %}
-    <div class="sidebar-foot"><strong>OPSWATCH</strong>Infrastructure Management Console</div>
+    <div class="sidebar-foot"><strong>국방망 인트라넷</strong>망운용 실습 환경</div>
   </aside>
   <header class="topbar">
     <div class="breadcrumb">
