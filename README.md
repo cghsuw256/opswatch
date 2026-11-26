@@ -4,22 +4,22 @@
 
 | 구분 | 접속 주소 | 데이터 |
 | --- | --- | --- |
-| 신규 국방망 인트라넷 | [http://intranet.localhost:8001/](http://intranet.localhost:8001/) | 독립 SQLite 볼륨, 신규 발급 계정 |
-| 레거시 실습 사이트 | [http://127.0.0.1:8000/](http://127.0.0.1:8000/) | 기존 MySQL 볼륨, 실습 계정 |
+| 신규 국방망 인트라넷 | [http://intranet.localhost:8001/](http://intranet.localhost:8001/) | 레거시와 같은 MySQL `opswatch` |
+| 레거시 실습 사이트 | [http://127.0.0.1:8000/](http://127.0.0.1:8000/) | 같은 MySQL `opswatch` |
 
 ### 신규 시스템 실행과 계정 발급
 
 ```powershell
-docker compose -f docker-compose.patched.yml up -d --build --wait
-docker compose -f docker-compose.patched.yml exec web python manage.py create_operator duty01 --name "김준호" --rank "중사" --diagnostics
-docker compose -f docker-compose.patched.yml exec web python manage.py create_operator support01 --name "박서윤" --rank "7급 군무원"
+docker compose up -d --build --wait patched
+docker compose exec patched python manage.py create_operator duty01 --name "김준호" --rank "중사" --diagnostics
+docker compose exec patched python manage.py create_operator support01 --name "박서윤" --rank "7급 군무원"
 ```
 
 - 비밀번호는 터미널 프롬프트에서 두 번 입력합니다. 초기 계정이나 레거시 계정·데이터 자동 이관은 없습니다. 포털 관리 역할은 `--portal-admin`, 호스트 점검 기록 조회 권한은 `--diagnostics`로 각각 부여합니다.
 - [군인사법 제3조](https://www.law.go.kr/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1029126493)의 군인 계급과 [군무원인사법 제3조](https://www.law.go.kr/LSW/lsLawLinkInfo.do?lsJoLnkSeq=900324816&chrClsCd=010202)의 일반군무원 1~9급을 사용합니다. 홈, 부대원, 내 정보, 결재선, 당직 연락망에서 계급·직급을 표시합니다.
 - 공지사항·게시판·결재·일정 등 기존 업무 화면은 유지합니다. 공개 연락망에서 콘솔 ID를 빼고, 개발 설정·내부 토큰·기존 실행 API와 에이전트는 신규 사이트에 연결하지 않습니다. 서비스 상태와 호스트 진단은 DB에 저장된 상태·기록만 조회합니다.
 - `/dev/setting`은 등록하지 않습니다. 레거시 `/admin/setting`은 기존 데모 JSON을 표시합니다. 신규 `/admin/setting`은 포털 관리자에게 DB 엔진 종류만 표시합니다.
-- 신규 로그인은 출발지당 60초 구간에 최대 10회, 비밀번호는 최소 14자와 Django 검증 정책을 적용합니다. 신규 사이트 주소는 `intranet.localhost`를 사용하세요. 별도 호스트와 쿠키, 별도 DB·서명 키를 사용하며 둘 다 로컬에만 바인딩합니다.
+- 신규 사이트는 레거시와 같은 MySQL 데이터베이스·접속 계정을 사용합니다. 세션 쿠키 이름과 서명 키는 분리되어 있습니다.
 
 레거시 진행 자료: [`docs/WALKTHROUGH.md`](docs/WALKTHROUGH.md). 신규·레거시 방어 비교: [`docs/SECURE_CODING.md`](docs/SECURE_CODING.md).
 
@@ -147,8 +147,8 @@ docker compose up --build    # 다시 시드
 신규 사이트 검증:
 
 ```powershell
-docker compose -f docker-compose.patched.yml exec web python manage.py test patched_portal
-docker compose -f docker-compose.patched.yml exec web python manage.py migrate --check
+docker compose exec patched python manage.py test patched_portal
+docker compose exec patched python manage.py migrate --check
 ```
 
 레거시 사이트 검증:

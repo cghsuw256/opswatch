@@ -71,6 +71,41 @@ services:
     pids_limit: 128
     restart: "no"
 
+  patched:
+    build:
+      context: .
+      dockerfile: docker/patched.Dockerfile
+    ports:
+      - "127.0.0.1:8001:8000"
+    environment:
+      DJANGO_SECRET_KEY: lab-only-patched-signing-key-not-a-database-credential
+      MYSQL_HOST: db
+      MYSQL_DATABASE: opswatch
+      MYSQL_USER: opswatch
+      MYSQL_PASSWORD: opswatch-lab-only
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lab
+      - ingress
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    privileged: false
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: "0.75"
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import Request, urlopen; urlopen(Request('http://127.0.0.1:8000/health/', headers={'Host': 'intranet.localhost'}), timeout=2).close()"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
 networks:
   lab:
     internal: true

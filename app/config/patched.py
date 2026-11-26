@@ -1,25 +1,33 @@
-"""Settings for the separate, loopback-only patched intranet."""
+"""Patched intranet. It uses the same MySQL database and account as the legacy site."""
 
 import os
-from pathlib import Path
+import sys
 
 from .common import *
 
-DATA_DIR = Path(os.environ.get("PATCHED_DATA_DIR", BASE_DIR / ".patched-data"))
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY") or (DATA_DIR / "secret-key").read_text(encoding="ascii").strip()
+
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "lab-only-patched-signing-key-not-a-database-credential",
+)
 DEBUG = False
 ALLOWED_HOSTS = ["intranet.localhost"]
 ROOT_URLCONF = "config.patched_urls"
 INSTALLED_APPS = [*INSTALLED_APPS, "patched_portal"]
 PATCHED_SITE = True
-
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": DATA_DIR / "intranet.sqlite3",
-        "OPTIONS": {"transaction_mode": "IMMEDIATE"},
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.environ.get("MYSQL_DATABASE", "opswatch"),
+        "USER": os.environ.get("MYSQL_USER", "opswatch"),
+        "PASSWORD": os.environ.get("MYSQL_PASSWORD", "opswatch-lab-only"),
+        "HOST": os.environ.get("MYSQL_HOST", "db"),
+        "PORT": os.environ.get("MYSQL_PORT", "3306"),
+        "OPTIONS": {"charset": "utf8mb4", "init_command": "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 }
+if any(arg in {"test", "makemigrations", "check"} for arg in sys.argv):
+    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}}
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {

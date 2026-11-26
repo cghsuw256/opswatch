@@ -3,12 +3,11 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    DJANGO_SETTINGS_MODULE=config.patched \
-    PATCHED_DATA_DIR=/data
+    DJANGO_SETTINGS_MODULE=config.patched
 
 RUN groupadd --gid 1000 appuser \
     && useradd --uid 1000 --gid 1000 --home-dir /app --shell /usr/sbin/nologin appuser \
-    && install -d -o appuser -g appuser -m 700 /data /app/staticfiles
+    && install -d -o appuser -g appuser -m 755 /app/staticfiles
 
 WORKDIR /app/app
 
