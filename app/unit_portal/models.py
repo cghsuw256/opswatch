@@ -37,6 +37,7 @@ class Notice(models.Model):
     body = models.TextField("내용", max_length=5000)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="intranet_notices")
     pinned = models.BooleanField("상단에 고정", default=False)
+    only_username = models.CharField("열람 계정", max_length=150, blank=True)
     created = models.DateTimeField(default=timezone.now)
 
     class Meta:

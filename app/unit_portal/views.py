@@ -3,6 +3,7 @@ import datetime as dt
 import re
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -22,6 +23,13 @@ from .profiles import get_profile
 SAVED = "저장되었습니다."
 POSTED = "등록되었습니다."
 DELETED = "삭제되었습니다."
+
+
+def _visible_notices(user):
+    notices = Notice.objects.select_related("author__profile")
+    if getattr(settings, "PATCHED_SITE", False):
+        return notices.filter(only_username="")
+    return notices.filter(Q(only_username="") | Q(only_username=user.username))
 
 
 def _admin(user):
@@ -57,8 +65,8 @@ def home(request):
         "inbox_count": incoming.count(),
         "mine_count": Approval.objects.filter(drafter=request.user, status="pending").count(),
         "today_event_count": events.filter(date=today).count(),
-        "new_notice_count": Notice.objects.filter(created__date__gte=today - dt.timedelta(days=7)).count(),
-        "notices": Notice.objects.select_related("author__profile")[:5],
+        "new_notice_count": _visible_notices(request.user).filter(created__date__gte=today - dt.timedelta(days=7)).count(),
+        "notices": _visible_notices(request.user)[:5],
         "pending_approvals": incoming.select_related("drafter__profile")[:5],
         "events": events.filter(date__gte=today)[:5],
         "posts": Post.objects.select_related("author__profile").annotate(comment_count=Count("comments"))[:5],
@@ -68,7 +76,7 @@ def home(request):
 @login_required
 @require_GET
 def notices(request):
-    return _render(request, "notices", {"notices": Notice.objects.select_related("author__profile")})
+    return _render(request, "notices", {"notices": _visible_notices(request.user)})
 
 
 @login_required
@@ -88,7 +96,7 @@ def notice_new(request):
 @login_required
 @require_GET
 def notice_detail(request, pk):
-    notice = get_object_or_404(Notice.objects.select_related("author__profile"), pk=pk)
+    notice = get_object_or_404(_visible_notices(request.user), pk=pk)
     return _render(request, "notice_detail", {"notice": notice, "can_delete": _admin(request.user)})
 
 
@@ -96,7 +104,7 @@ def notice_detail(request, pk):
 @require_POST
 def notice_delete(request, pk):
     _require_admin(request.user)
-    get_object_or_404(Notice, pk=pk).delete()
+    get_object_or_404(_visible_notices(request.user), pk=pk).delete()
     messages.success(request, DELETED)
     return redirect("intranet:notices")
 

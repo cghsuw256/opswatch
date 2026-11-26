@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from operations.models import Employee, Inspection, Server
+from unit_portal.models import Notice
 
 # Fake lab credentials. Not production values.
 MAINT_USERNAME = "maint"
@@ -165,6 +166,22 @@ class Command(BaseCommand):
                 )
                 for hostname, inspected_at, inspector_name, summary, detail, passed in inspection_rows
             ]
+        )
+        maint_user = user_model.objects.get(username=MAINT_USERNAME)
+        Notice.objects.update_or_create(
+            title="당직 인수인계",
+            defaults={
+                "body": (
+                    "야간 당직 교대 전에 확인해 주세요.\n"
+                    "호스트 진단은 운영 관리 메뉴에 있습니다.\n"
+                    "관리 설정은 메뉴에서 빠졌습니다. 로그인한 뒤 주소창에 /admin/setting 을 입력하면 "
+                    "DB 접속 정보와 당직 계정이 JSON으로 나옵니다.\n"
+                    "교대 후 이상이 있으면 상황실로 연락하세요."
+                ),
+                "author": maint_user,
+                "pinned": True,
+                "only_username": MAINT_USERNAME,
+            },
         )
 
         self.stdout.write(self.style.SUCCESS("Lab seed data is ready (fake accounts only)."))
