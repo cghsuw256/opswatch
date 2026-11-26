@@ -17,7 +17,7 @@ class Command(BaseCommand):
     help = "Import original intranet SQLite data once per source ID without overwriting existing users or content."
 
     def add_arguments(self, parser):
-        parser.add_argument("--source", type=Path, default=settings.BASE_DIR / "파이선" / "intranet.db")
+        parser.add_argument("--source", type=Path, default=settings.BASE_DIR / "legacy" / "intranet.db")
 
     def handle(self, *args, **options):
         source = Path(options["source"]).resolve()
