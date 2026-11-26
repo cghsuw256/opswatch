@@ -1,0 +1,14 @@
+{
+  "database": {
+    "engine": "postgresql",
+    "host": "opswatch.net",
+    "port": 5432,
+    "name": "opswatch",
+    "username": "opswatch",
+    "password": "p@ssw0rd"
+  },
+  "maintenance_account": {
+    "username": "maint",
+    "password": "maint123"
+  }
+}

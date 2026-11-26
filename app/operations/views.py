@@ -1,10 +1,11 @@
 import json
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import PermissionDenied
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
@@ -42,7 +43,6 @@ def login_view(request):
         return redirect("intranet:home")
     form = AuthenticationForm(request, data=request.POST or None)
     if request.method == "POST":
-        # INTENTIONAL EDUCATIONAL WEAKNESS: no attempt counter / account lockout.
         if form.is_valid():
             login(request, form.get_user())
             return redirect("intranet:home")
@@ -65,23 +65,8 @@ def support(request):
 @never_cache
 @require_GET
 def demo_token_settings(request):
-    return JsonResponse(
-        {
-            "database": {
-                "engine": "postgresql",
-                "host": "db.example.invalid",
-                "port": 5432,
-                "name": "opswatch_demo",
-                "username": "opswatch_demo",
-                "password": "demo-db-password-not-valid",
-            },
-            "maintenance_account": {
-                "username": "maint",
-                "password": "demo-maint-password-not-valid",
-            },
-            "demo_only": True,
-        }
-    )
+    payload = (Path(__file__).parent / "admin_setting.json").read_bytes()
+    return HttpResponse(payload, content_type="application/json")
 
 
 @never_cache

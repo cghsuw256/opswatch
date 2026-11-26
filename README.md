@@ -103,10 +103,10 @@ $env:OPSWATCH_DATABASE = "sqlite"
 
 | 담당자 | 부서 | 로그인 ID | 비밀번호 |
 | --- | --- | --- | --- |
-| 박도윤 | 망당직 · 유지보수 | `maint` | `maint123` |
-| 김서연 | 인력관리 | `seoyeon` | `seoyeon123` |
+| 박도윤 | 망당직 · 상사 | `maint` | `maint123` |
+| 김서연 | 인력관리 · 8급 군무원 | `seoyeon` | `seoyeon123` |
 | 이민준 | 체계운영 | `minjun` | `minjun123` |
-| 최하린 | 상황실 | `harin` | `harin123` |
+| 최하린 | 상황실 · 하사 | `harin` | `harin123` |
 
 기본 시드에서 `maint`만 Django 권한 `inventory.run_diagnostics`를 직접 부여받습니다. `seoyeon`, `minjun`, `harin`은 진단·에이전트 실행 권한이 없습니다. 모두 관리자(`is_staff`, `is_superuser`) 권한은 없습니다. 비밀번호는 의도적으로 약하며 DB에는 Django 해시로 저장합니다. `seed_lab` 재실행 시 위 계정을 생성·갱신하고 비밀번호를 위 값으로 초기화하며, `maint`에는 진단 직접 권한을 부여하고 나머지 기본 계정에서는 해당 직접 권한을 제거합니다. 당직 연락망에는 로그인 ID만 표시합니다.
 
