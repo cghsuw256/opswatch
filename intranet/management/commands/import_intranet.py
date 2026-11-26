@@ -3,7 +3,6 @@ import datetime as dt
 from pathlib import Path
 import sqlite3
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import IntegrityError, transaction
@@ -17,7 +16,7 @@ class Command(BaseCommand):
     help = "Import original intranet SQLite data once per source ID without overwriting existing users or content."
 
     def add_arguments(self, parser):
-        parser.add_argument("--source", type=Path, default=settings.BASE_DIR / "legacy" / "intranet.db")
+        parser.add_argument("--source", type=Path, required=True)
 
     def handle(self, *args, **options):
         source = Path(options["source"]).resolve()

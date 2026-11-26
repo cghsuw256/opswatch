@@ -33,7 +33,7 @@
 | Intranet | `intranet/` | 부대 업무 모델·폼·뷰·공통 디자인 템플릿 |
 | Import | `intranet/management/commands/import_intranet.py` | 원본 SQLite 데이터의 멱등 이관 |
 
-현재 서비스는 `opswatch/`(프로젝트 설정), `intranet/`(부대 업무), `inventory/`(운영 관리)로 구성됩니다. `legacy/`는 이전 소스와 이관용 원본 DB, `docker/`는 컨테이너 초기화 스크립트, `docs/`는 실습 문서입니다.
+현재 서비스는 `opswatch/`(프로젝트 설정), `intranet/`(부대 업무), `inventory/`(운영 관리)로 구성됩니다. `docker/`는 컨테이너 초기화 스크립트, `docs/`는 실습 문서입니다.
 
 Django 관리자 사이트는 연결하지 않습니다. `/admin/diagnostics/`는 실습용 진단 화면입니다.
 
@@ -63,23 +63,18 @@ docker compose up --build
 
 브라우저: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 
-MySQL이 healthy가 된 뒤 엔트리포인트가 `migrate`, `seed_lab`, `import_intranet`을 실행합니다. 로그인 후 `/`의 인트라넷 홈으로 이동합니다. 공개 당직 연락망은 `/staff/`에서 계속 이용할 수 있습니다.
+MySQL이 healthy가 된 뒤 엔트리포인트가 `migrate`와 `seed_lab`을 실행합니다. 로그인 후 `/`의 인트라넷 홈으로 이동합니다. 공개 당직 연락망은 `/staff/`에서 계속 이용할 수 있습니다.
 
-### 통합 화면과 기존 데이터
+### 통합 화면
 
 - **인트라넷**: 홈, 공지사항, 게시판(검색·분류·댓글), 결재(받은 문서·내 기안), 일정(공통·개인), 부대원, 내 정보·비밀번호 변경.
 - **운영 관리**: 기존 운영 개요(`/dashboard/`), 당직 연락망, 내부 토큰, 호스트 진단, 상황실 에이전트. 인트라넷과 같은 Django 로그인 세션·메뉴·색상·컴포넌트를 사용합니다.
-- [`legacy/app.py`](legacy/app.py)의 기능을 Django `intranet` 앱으로 옮겼습니다. 별도 Python 서버나 iframe은 사용하지 않습니다. 원본 소스와 `legacy/intranet.db`는 보존하고, 통합 후 변경 사항은 Django DB에 저장합니다.
-- 최초 이관 대상: 원본 계정 12개, 공지 5개, 게시글 12개, 댓글 7개, 결재 7개, 일정 8개. 원본 DB의 `정보공유` 분류와 `지출결의`·`품의` 문서 종류도 그대로 지원합니다.
-- 이관을 다시 실행해도 통합 후 수정한 내용·비밀번호를 덮어쓰거나 삭제한 문서를 복원하지 않습니다. 기존 Django 계정과 ID가 같으면 기존 계정과 프로필을 유지합니다. 원본 로그인 세션은 가져오지 않으며, 원본 계정의 비밀번호 해시는 최초 정상 인증 시 Django 형식으로 자동 갱신됩니다.
 - 인트라넷 관리자는 공지 작성·삭제와 공통 일정 등록이 가능합니다. 일반 사용자는 본인 게시글·일정만 삭제하고, 결재는 기안자·지정 결재자·인트라넷 관리자만 열람합니다. 승인·반려는 지정 결재자만 한 번 처리할 수 있습니다. 인트라넷 관리자 역할은 Django 관리자 권한이나 호스트 진단 권한을 부여하지 않습니다.
-- [`legacy/military_intranet_lab/`](legacy/military_intranet_lab/)는 별도의 이전 실습 자료입니다. Django 서비스를 실행할 때 함께 띄울 필요는 없습니다.
 
-원본 데이터를 수동 이관하려면:
+별도로 보관한 원본 SQLite 파일이 있으면 수동 이관할 수 있습니다.
 
 ```powershell
-.\.venv\Scripts\python manage.py import_intranet
-# 다른 원본 파일을 명시하려면: --source "경로\intranet.db"
+.\.venv\Scripts\python manage.py import_intranet --source "경로\intranet.db"
 ```
 
 이관 ID 매핑은 한 원본 DB 기준입니다. 다른 ID 체계의 DB를 같은 대상 DB에 추가 병합하는 용도로 사용하지 마세요.
@@ -101,7 +96,6 @@ python -m venv .venv
 $env:OPSWATCH_DATABASE = "sqlite"
 .\.venv\Scripts\python manage.py migrate
 .\.venv\Scripts\python manage.py seed_lab
-.\.venv\Scripts\python manage.py import_intranet
 .\.venv\Scripts\python manage.py runserver 127.0.0.1:8000
 ```
 
@@ -117,8 +111,6 @@ $env:OPSWATCH_DATABASE = "sqlite"
 | 최하린 | 상황실 | `harin` | `harin123` |
 
 기본 시드에서 `maint`만 Django 권한 `inventory.run_diagnostics`를 직접 부여받습니다. `seoyeon`, `minjun`, `harin`은 진단·에이전트 실행 권한이 없습니다. 모두 관리자(`is_staff`, `is_superuser`) 권한은 없습니다. 비밀번호는 의도적으로 약하며 DB에는 Django 해시로 저장합니다. `seed_lab` 재실행 시 위 계정을 생성·갱신하고 비밀번호를 위 값으로 초기화하며, `maint`에는 진단 직접 권한을 부여하고 나머지 기본 계정에서는 해당 직접 권한을 제거합니다. 당직 연락망에는 로그인 ID만 표시합니다.
-
-원본 인트라넷 계정도 같은 로그인 화면을 사용합니다. 현재 원본 데이터의 관리자는 `admin` / `admin1234`, 일반 계정 예시는 `jykim` / `nova1234`입니다. 이관 계정에는 기본적으로 진단 권한이 없으며, `admin`의 부대 업무 관리용 역할도 진단 권한이나 Django 관리자 권한과 별개입니다. 이관 후 변경한 비밀번호는 `import_intranet` 재실행으로 초기화되지 않습니다.
 
 - 취약 내부 토큰: 로그인 사용자에게 제공되는 **내부 토큰** 화면의 **에이전트 상태 조회**가 호출하는 `GET /api/internal/metadata/` 응답 JSON에 평문 포함. 화면에는 서비스명과 상태만 표시
 - 상태 조회는 현재 세션에 토큰을 저장합니다. 진단·에이전트 메뉴는 `inventory.run_diagnostics` 권한이 있을 때만 표시되며, 일반 계정은 토큰을 받아도 실행할 수 없습니다. 로그아웃하면 다시 조회해야 합니다.
