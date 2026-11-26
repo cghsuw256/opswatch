@@ -89,6 +89,20 @@ def support(request):
 
 @never_cache
 @require_GET
+def demo_token_settings(request):
+    # This example token is not accepted by any API.
+    return JsonResponse(
+        {
+            "internal_token": "opswatch-demo-token-not-valid",
+            "authentication": "static-token",
+            "expires_in": None,
+            "demo_only": True,
+        }
+    )
+
+
+@never_cache
+@require_GET
 def metadata_api(request):
     if not request.user.is_authenticated:
         return _json_error("인증이 필요합니다.", 401)
