@@ -5,7 +5,7 @@ from django.contrib.auth.models import Permission
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from inventory.models import Employee, Inspection, Server
+from operations.models import Employee, Inspection, Server
 
 # Fake lab credentials. Not production values.
 MAINT_USERNAME = "maint"

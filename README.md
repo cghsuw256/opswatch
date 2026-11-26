@@ -25,11 +25,13 @@
 | 위치 | 역할 |
 | --- | --- |
 | `app/` | Django 실행 파일과 Python 의존성 |
-| `app/defense_intranet/` | 프로젝트 설정, 루트 URL, WSGI |
-| `app/intranet/` | 부대 업무 앱 |
-| `app/inventory/` | 운영 관리 앱과 실습 시드 |
+| `app/config/` | 프로젝트 설정, 루트 URL, WSGI |
+| `app/unit_portal/` | 부대 업무 앱 |
+| `app/operations/` | 운영 관리 앱과 실습 시드 |
 | `docker/` | Dockerfile, 시작 스크립트, 컨테이너 실습 리소스 |
 | `docs/` | 실습 절차와 보안 개선안 |
+
+Django 앱 레이블 `intranet`, `inventory`는 유지하므로 기존 DB 테이블과 권한을 그대로 사용합니다.
 
 Django 관리자 사이트는 연결하지 않습니다. `/admin/diagnostics/`는 실습용 진단 화면입니다.
 
@@ -140,7 +142,7 @@ docker compose up --build    # 다시 시드
 $env:OPSWATCH_DATABASE = "sqlite"
 .\.venv\Scripts\python app/manage.py check
 .\.venv\Scripts\python app/manage.py makemigrations --check --dry-run
-.\.venv\Scripts\python app/manage.py test intranet inventory
+.\.venv\Scripts\python app/manage.py test unit_portal operations
 ```
 
 호스트 단위 테스트는 `subprocess`를 모의하고 런타임 차단·입력 오류·출력 상한·타임아웃을 확인합니다. 실제 셸 동작은 격리된 컨테이너의 기존 진단·에이전트 화면에서 확인합니다.

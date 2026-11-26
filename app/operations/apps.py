@@ -3,5 +3,6 @@ from django.apps import AppConfig
 
 class InventoryConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "inventory"
+    name = "operations"
+    label = "inventory"
     verbose_name = "국방망 운영 관리"

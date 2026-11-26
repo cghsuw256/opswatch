@@ -21,8 +21,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "inventory",
-    "intranet.apps.IntranetConfig",
+    "operations.apps.InventoryConfig",
+    "unit_portal.apps.IntranetConfig",
 ]
 
 MIDDLEWARE = [
@@ -36,8 +36,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "defense_intranet.urls"
-WSGI_APPLICATION = "defense_intranet.wsgi.application"
+ROOT_URLCONF = "config.urls"
+WSGI_APPLICATION = "config.wsgi.application"
 
 TEMPLATES = [
     {
@@ -49,7 +49,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "intranet.context_processors.intranet_shell",
+                "unit_portal.context_processors.intranet_shell",
             ],
         },
     }
@@ -86,7 +86,7 @@ else:
 AUTH_PASSWORD_VALIDATORS = []
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
-    "intranet.hashers.LegacyPBKDF2SHA256PasswordHasher",
+    "unit_portal.hashers.LegacyPBKDF2SHA256PasswordHasher",
 ]
 
 LANGUAGE_CODE = "ko-kr"

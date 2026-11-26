@@ -71,8 +71,8 @@ class AccessControlTests(TestCase):
                 self.assertEqual(self.client.get(path).status_code, 200 if allowed else 403)
         result = SimpleNamespace(status="ok", output="diagnostic output", timed_out=False)
         for path, service_name, return_value in (
-            ("/api/internal/diagnose/", "inventory.views.run_ping_diagnosis", result),
-            ("/api/internal/assistant/", "inventory.views.answer_ops_request", ("reply", result)),
+            ("/api/internal/diagnose/", "operations.views.run_ping_diagnosis", result),
+            ("/api/internal/assistant/", "operations.views.answer_ops_request", ("reply", result)),
         ):
             with self.subTest(path=path), patch(service_name, return_value=return_value) as service:
                 response = self.client.post(

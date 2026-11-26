@@ -8,7 +8,7 @@
 ## 1. 직원 안내에서 콘솔 ID 노출
 
 **원인:** 인증 없는 `/staff/`가 유지보수 로그인 ID를 그대로 렌더링합니다.
-`inventory/templates/inventory/staff.html`, 시드의 `Employee.login_id`.
+`operations/templates/inventory/staff.html`, 시드의 `Employee.login_id`.
 
 **개선:**
 
@@ -53,7 +53,7 @@
 
 ## 5. 명령 문자열 결합 (Command Injection)
 
-**원인:** `inventory/services/diagnostics.py`의 `run_ping_diagnosis()`가 입력을 `f"/usr/bin/getent hosts {cleaned}"`에 결합하여 `subprocess.run(..., shell=True)`로 실제 실행합니다. `;`/`&&` 같은 셸 메타문자가 추가 명령으로 해석됩니다. 이 경로는 격리 컨테이너에서만 활성화되지만, 격리는 취약점 수정의 대체가 아닙니다.
+**원인:** `operations/services/diagnostics.py`의 `run_ping_diagnosis()`가 사용자 입력을 셸 명령 문자열과 결합해 실행합니다. 이 경로는 격리 컨테이너에서만 활성화되지만, 격리는 취약점 수정의 대체가 아닙니다.
 
 **개선 (필수):**
 

@@ -1,6 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 
-from inventory.models import Employee
+from operations.models import Employee
 
 from .models import Profile
 

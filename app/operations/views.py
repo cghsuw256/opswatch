@@ -10,16 +10,16 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from inventory.charts import alert_evolution
-from inventory.models import Employee, Inspection, Server
-from inventory.services.diagnostics import (
+from operations.charts import alert_evolution
+from operations.models import Employee, Inspection, Server
+from operations.services.diagnostics import (
     DiagnosticsBusy,
     DiagnosticsDisabled,
     DiagnosticsInvalid,
     diagnostics_enabled,
     run_ping_diagnosis,
 )
-from inventory.services.assistant import answer_ops_request
+from operations.services.assistant import answer_ops_request
 
 
 def _json_error(message, status):

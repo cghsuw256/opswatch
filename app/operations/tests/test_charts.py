@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 from django.test import SimpleTestCase
 
-from inventory.charts import alert_evolution
+from operations.charts import alert_evolution
 
 
 class ExampleEventTests(SimpleTestCase):

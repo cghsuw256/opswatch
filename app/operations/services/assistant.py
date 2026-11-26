@@ -6,7 +6,7 @@ shell diagnostic service as the diagnostic API.
 
 from __future__ import annotations
 
-from inventory.services.diagnostics import DiagnosisResult, run_ping_diagnosis
+from operations.services.diagnostics import DiagnosisResult, run_ping_diagnosis
 
 
 def answer_ops_request(message: str, target: str) -> tuple[str, DiagnosisResult]:

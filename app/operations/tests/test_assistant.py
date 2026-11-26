@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.management import call_command
 from django.test import Client, TestCase, override_settings
 
-from inventory.services.diagnostics import _DIAGNOSTIC_SLOT
+from operations.services.diagnostics import _DIAGNOSTIC_SLOT
 
 
 @override_settings(OPSWATCH_RUNTIME="host", OPSWATCH_ENABLE_DIAGNOSTICS=True)
@@ -26,14 +26,14 @@ class AssistantTests(TestCase):
 
     def test_token_only_request_requires_login_without_csrf(self):
         browser = Client(enforce_csrf_checks=True)
-        with patch("inventory.views.answer_ops_request") as service:
+        with patch("operations.views.answer_ops_request") as service:
             response = self.post({"message": "확인", "target": "web-01.lab.local; whoami"}, settings.OPSWATCH_INTERNAL_TOKEN, browser)
             self.assertEqual(response.status_code, 401)
             service.assert_not_called()
         self.assertNotIn("_auth_user_id", browser.session)
 
     def test_api_rejects_missing_or_wrong_token(self):
-        with patch("inventory.views.answer_ops_request") as service:
+        with patch("operations.views.answer_ops_request") as service:
             for token in (None, "wrong"):
                 self.assertEqual(self.post({"message": "확인", "target": "web-01.lab.local"}, token).status_code, 403)
             service.assert_not_called()
@@ -52,7 +52,7 @@ class AssistantTests(TestCase):
 
     @override_settings(OPSWATCH_RUNTIME="container", OPSWATCH_ENABLE_DIAGNOSTICS=True)
     def test_reply_contains_service_output(self):
-        with patch("inventory.services.diagnostics.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "real command output", "")):
+        with patch("operations.services.diagnostics.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "real command output", "")):
             response = self.post({"message": "확인", "target": "web-01.lab.local; id"}, settings.OPSWATCH_INTERNAL_TOKEN)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["ok"])
@@ -62,7 +62,7 @@ class AssistantTests(TestCase):
     @override_settings(OPSWATCH_RUNTIME="container", OPSWATCH_ENABLE_DIAGNOSTICS=True)
     def test_timeout_and_busy_are_reported(self):
         payload = {"message": "확인", "target": "web-01.lab.local"}
-        with patch("inventory.services.diagnostics.subprocess.run", side_effect=subprocess.TimeoutExpired("getent", 3, output="partial")):
+        with patch("operations.services.diagnostics.subprocess.run", side_effect=subprocess.TimeoutExpired("getent", 3, output="partial")):
             response = self.post(payload, settings.OPSWATCH_INTERNAL_TOKEN)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.json()["ok"])

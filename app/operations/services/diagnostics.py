@@ -10,7 +10,7 @@ from threading import BoundedSemaphore
 from django.conf import settings
 from django.utils import timezone
 
-from inventory.models import Server
+from operations.models import Server
 
 MAX_TARGET_LEN = 200
 MAX_OUTPUT_LEN = 8192

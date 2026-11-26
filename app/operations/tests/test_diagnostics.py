@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.management import call_command
 from django.test import Client, TestCase, override_settings
 
-from inventory.services.diagnostics import (
+from operations.services.diagnostics import (
     DiagnosticsBusy, DiagnosticsDisabled, DiagnosticsInvalid,
     MAX_OUTPUT_LEN, _DIAGNOSTIC_SLOT, run_ping_diagnosis,
 )
@@ -62,7 +62,7 @@ class DiagnoseApiTests(TestCase):
 
     def test_token_only_request_requires_login_without_csrf(self):
         client = Client(enforce_csrf_checks=True)
-        with patch("inventory.views.run_ping_diagnosis") as service:
+        with patch("operations.views.run_ping_diagnosis") as service:
             response = self.post_target("web-01.lab.local; whoami", settings.OPSWATCH_INTERNAL_TOKEN, client)
             self.assertEqual(response.status_code, 401)
             self.assertIn("error", response.json())
@@ -70,7 +70,7 @@ class DiagnoseApiTests(TestCase):
         self.assertNotIn("_auth_user_id", client.session)
 
     def test_missing_and_wrong_tokens_rejected_before_service(self):
-        with patch("inventory.views.run_ping_diagnosis") as service:
+        with patch("operations.views.run_ping_diagnosis") as service:
             for token in (None, "wrong"):
                 self.assertEqual(self.post_target("web-01.lab.local", token).status_code, 403)
             service.assert_not_called()
@@ -89,7 +89,7 @@ class DiagnoseApiTests(TestCase):
 
     @override_settings(OPSWATCH_RUNTIME="container", OPSWATCH_ENABLE_DIAGNOSTICS=True)
     def test_api_returns_actual_service_result_and_busy_status(self):
-        with patch("inventory.services.diagnostics.subprocess.run", return_value=subprocess.CompletedProcess([], 7, "actual stdout", "actual stderr")):
+        with patch("operations.services.diagnostics.subprocess.run", return_value=subprocess.CompletedProcess([], 7, "actual stdout", "actual stderr")):
             response = self.post_target("unknown; id", settings.OPSWATCH_INTERNAL_TOKEN)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.json()["ok"])
@@ -110,7 +110,7 @@ class DiagnoseServiceTests(TestCase):
 
     def test_real_shell_command_and_saved_report(self):
         for target in ("web-01.lab.local; whoami", "web-01.lab.local && id"):
-            with self.subTest(target=target), patch("inventory.services.diagnostics.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "command result", "")):
+            with self.subTest(target=target), patch("operations.services.diagnostics.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "command result", "")):
                 result = run_ping_diagnosis(target)
                 self.assertEqual(result.status, "ok")
                 self.assertIn("23%", result.output)
@@ -120,20 +120,20 @@ class DiagnoseServiceTests(TestCase):
 
     def test_host_or_disabled_container_never_starts_process(self):
         for runtime, enabled in (("host", True), ("host", False), ("container", False)):
-            with self.subTest(runtime=runtime, enabled=enabled), override_settings(OPSWATCH_RUNTIME=runtime, OPSWATCH_ENABLE_DIAGNOSTICS=enabled), patch("inventory.services.diagnostics.subprocess.run") as process:
+            with self.subTest(runtime=runtime, enabled=enabled), override_settings(OPSWATCH_RUNTIME=runtime, OPSWATCH_ENABLE_DIAGNOSTICS=enabled), patch("operations.services.diagnostics.subprocess.run") as process:
                 with self.assertRaises(DiagnosticsDisabled):
                     run_ping_diagnosis("web-01.lab.local; id")
                 process.assert_not_called()
 
     def test_invalid_targets_never_start_process(self):
-        with patch("inventory.services.diagnostics.subprocess.run") as process:
+        with patch("operations.services.diagnostics.subprocess.run") as process:
             for target in (None, 1, [], {}, "", " ", "x" * 201, "x\u0000y"):
                 with self.subTest(target=target), self.assertRaises(DiagnosticsInvalid):
                     run_ping_diagnosis(target)
             process.assert_not_called()
 
     def test_timeout_keeps_partial_output_and_releases_slot(self):
-        with patch("inventory.services.diagnostics.subprocess.run", side_effect=subprocess.TimeoutExpired("getent", 3, output=b"partial output", stderr=b"partial error")):
+        with patch("operations.services.diagnostics.subprocess.run", side_effect=subprocess.TimeoutExpired("getent", 3, output=b"partial output", stderr=b"partial error")):
             result = run_ping_diagnosis("web-01.lab.local")
         self.assertTrue(result.timed_out)
         self.assertEqual(result.status, "error")
@@ -144,7 +144,7 @@ class DiagnoseServiceTests(TestCase):
     def test_busy_never_starts_second_process(self):
         self.assertTrue(_DIAGNOSTIC_SLOT.acquire(blocking=False))
         try:
-            with patch("inventory.services.diagnostics.subprocess.run") as process:
+            with patch("operations.services.diagnostics.subprocess.run") as process:
                 with self.assertRaises(DiagnosticsBusy):
                     run_ping_diagnosis("web-01.lab.local")
                 process.assert_not_called()
@@ -152,5 +152,5 @@ class DiagnoseServiceTests(TestCase):
             _DIAGNOSTIC_SLOT.release()
 
     def test_output_is_bounded(self):
-        with patch("inventory.services.diagnostics.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "x" * 20000, "")):
+        with patch("operations.services.diagnostics.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "x" * 20000, "")):
             self.assertEqual(len(run_ping_diagnosis("web-01.lab.local").output.encode("utf-8")), MAX_OUTPUT_LEN)

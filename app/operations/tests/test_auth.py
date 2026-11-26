@@ -49,7 +49,7 @@ class AuthTests(TestCase):
         call_command("seed_lab", verbosity=0)
         call_command("seed_lab", verbosity=0)
         from django.contrib.auth import get_user_model
-        from inventory.models import Employee, Server
+        from operations.models import Employee, Server
 
         for username in ("maint", "seoyeon", "minjun", "harin"):
             with self.subTest(username=username):

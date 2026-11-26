@@ -50,7 +50,7 @@ web-01.lab.local && cat /opt/challenge/flag.txt
 
 실제 컨테이너 파일을 읽은 결과는 `FLAG{S3CuR3_C0DiNg}`입니다. `&&`는 선행 명령이 성공해야 뒤 명령을 실행하고, `;`는 성공 여부와 관계없이 다음 명령을 실행합니다.
 
-취약 지점은 `app/inventory/services/diagnostics.py`입니다.
+취약 지점은 `app/operations/services/diagnostics.py`입니다.
 
 ```python
 subprocess.run(

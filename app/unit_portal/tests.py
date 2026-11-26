@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from intranet.models import Approval, Event, Post, Profile
+from unit_portal.models import Approval, Event, Post, Profile
 
 
 class IntranetBoundaryTests(TestCase):
