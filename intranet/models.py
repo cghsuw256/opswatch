@@ -100,14 +100,3 @@ class Event(models.Model):
         ordering = ("date", "time", "pk")
         constraints = [models.CheckConstraint(condition=Q(scope__in=("personal", "company")), name="intranet_event_scope")]
         indexes = [models.Index(fields=("date", "scope"), name="intranet_event_calendar")]
-
-
-class LegacyImport(models.Model):
-    """Permanent source identity mapping, retained when imported content is deleted."""
-
-    table = models.CharField(max_length=20)
-    source_id = models.PositiveIntegerField()
-    target_id = models.PositiveBigIntegerField()
-
-    class Meta:
-        constraints = [models.UniqueConstraint(fields=("table", "source_id"), name="intranet_legacy_identity")]

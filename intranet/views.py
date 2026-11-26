@@ -239,11 +239,10 @@ def _calendar_context(request, form=None):
     by_day = {}
     admin = _admin(request.user)
     for event in events:
-        event.can_delete = event.owner_id == request.user.pk or admin
         by_day.setdefault(event.date, []).append(event)
     weeks = [[{"date": day, "day": day.day, "in_month": day.month == month, "is_today": day == today, "events": by_day.get(day, [])} for day in week] for week in dates]
     first = dt.date(year, month, 1)
-    return {"today": today, "year": year, "month_number": month, "month": first.strftime("%Y-%m"), "previous_month": (first - dt.timedelta(days=1)).strftime("%Y-%m"), "next_month": (dt.date(year, month, 28) + dt.timedelta(days=7)).strftime("%Y-%m"), "weeks": weeks, "events": [event for event in events if event.date.month == month], "form": form if form is not None else EventForm(is_admin=admin, initial={"date": today, "scope": "personal"})}
+    return {"month": first.strftime("%Y-%m"), "previous_month": (first - dt.timedelta(days=1)).strftime("%Y-%m"), "next_month": (dt.date(year, month, 28) + dt.timedelta(days=7)).strftime("%Y-%m"), "weeks": weeks, "events": [event for event in events if event.date.month == month], "form": form if form is not None else EventForm(is_admin=admin, initial={"date": today, "scope": "personal"})}
 
 
 @login_required

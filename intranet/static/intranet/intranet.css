@@ -23,9 +23,6 @@
 .intranet .intra-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .intranet .intra-tabs a { display: inline-block; padding: 8px 13px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: var(--muted); }
 .intranet .intra-tabs a.active { color: var(--accent); border-color: #b3c7e8; background: #edf3fd; font-weight: 600; }
-.intranet .intra-search { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
-.intranet .intra-search input { min-width: 180px; }
-.intranet .intra-search button { min-height: 42px; }
 .intranet .table-scroll { contain: layout paint; }
 .intranet .intra-table { min-width: 620px; }
 .intranet .intra-table .title { min-width: 220px; overflow-wrap: anywhere; }
