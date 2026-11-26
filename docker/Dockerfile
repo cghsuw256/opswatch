@@ -17,7 +17,8 @@ COPY --chown=appuser:appuser app/ ./
 COPY docker/entrypoint.sh /app/docker/entrypoint.sh
 COPY docker/challenge/flag.txt /opt/challenge/flag.txt
 
-RUN chmod 755 /app/docker/entrypoint.sh \
+RUN sed -i 's/\r$//' /app/docker/entrypoint.sh \
+    && chmod 755 /app/docker/entrypoint.sh \
     && chmod 444 /opt/challenge/flag.txt \
     && chown -R appuser:appuser /app
 
