@@ -4,7 +4,7 @@
 {% block page_name %}호스트 진단{% endblock %}
 {% block content %}
 <header class="module-head">
-  <div><p class="kicker">Host Status</p><h1>호스트 진단</h1><p class="module-description">호스트 주소 조회와 등록된 운영 상태 및 최근 점검 기록을 확인합니다.</p></div>
+  <div><p class="kicker">Host Status</p><h1>호스트 진단</h1><p class="module-description">호스트 ping 응답과 등록된 운영 상태 및 최근 점검 기록을 확인합니다.</p></div>
   <span class="page-tag"><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>운영 도구</span>
 </header>
 {% if not diagnostics_enabled %}
@@ -15,7 +15,7 @@
 {% endif %}
 <div class="tool-grid">
   <section class="card">
-    <header><h2><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>진단 요청</h2><span class="panel-meta">HOST LOOKUP</span></header>
+    <header><h2><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>진단 요청</h2><span class="panel-meta">PING CHECK</span></header>
     <div class="card-body">
       <form id="diagnose-form">
         {% csrf_token %}
@@ -23,7 +23,7 @@
           <label>진단 대상<input type="text" name="target" placeholder="web-01.lab.local" aria-describedby="target-hint" required{% if not diagnostics_enabled or not diagnostics_token %} disabled{% endif %}></label>
           <button class="btn primary" type="submit"{% if not diagnostics_enabled or not diagnostics_token %} disabled{% endif %}><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg>진단 실행</button>
         </div>
-        <p class="field-hint" id="target-hint">조회할 호스트 이름 또는 IP 주소를 입력하세요. 예: web-01.lab.local</p>
+        <p class="field-hint" id="target-hint">ping을 보낼 호스트 이름 또는 IP 주소를 입력하세요. 예: web-01.lab.local</p>
       </form>
     </div>
     <div class="result-section">
@@ -35,7 +35,7 @@
     <header><h2>진단 정보</h2></header>
     <div class="card-body">
       <dl class="detail-list">
-        <div><dt>진단 방식</dt><dd>컨테이너 내 호스트 조회</dd></div>
+        <div><dt>진단 방식</dt><dd>컨테이너 내 ping 실행</dd></div>
         <div><dt>API 인증</dt><dd>로그인 세션 · 진단 실행 권한 · 내부 토큰</dd></div>
         <div><dt>활성화 상태</dt><dd>{% if not diagnostics_enabled %}실행 비활성화{% elif diagnostics_token %}활성화됨{% else %}에이전트 상태 조회 필요{% endif %}</dd></div>
         <div><dt>결과 형식</dt><dd>호스트 보고서 및 명령 출력</dd></div>

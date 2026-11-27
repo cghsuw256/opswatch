@@ -36,7 +36,7 @@
 web-01.lab.local
 ```
 
-저장된 상태·점검 기록과 실제 `getent hosts` 출력이 함께 표시됩니다. 이 조회는 ping이 아니라 호스트 주소 조회입니다.
+저장된 상태·점검 기록과 실제 `ping` 출력이 함께 표시됩니다. 컨테이너에서 대상 호스트로 ICMP 요청을 2회 보냅니다.
 
 ### 명령 삽입 입력
 
@@ -50,13 +50,13 @@ web-01.lab.local; whoami
 web-01.lab.local && cat /opt/challenge/flag.txt
 ```
 
-실제 컨테이너 파일을 읽은 결과는 `FLAG{S3CuR3_C0DiNg}`입니다. `&&`는 선행 명령이 성공해야 뒤 명령을 실행하고, `;`는 성공 여부와 관계없이 다음 명령을 실행합니다.
+실제 컨테이너 파일을 읽으면 가상 부대원 정보가 출력됩니다. `&&`는 선행 명령이 성공해야 뒤 명령을 실행하고, `;`는 성공 여부와 관계없이 다음 명령을 실행합니다.
 
 취약 지점은 `app/operations/services/diagnostics.py`입니다.
 
 ```python
 subprocess.run(
-    f"/usr/bin/getent hosts {cleaned}",
+    f"/usr/bin/ping -c 2 -W 1 {cleaned}",
     shell=True, capture_output=True, text=True, timeout=3,
 )
 ```

@@ -8,6 +8,10 @@ RUN groupadd --gid 1000 appuser \
     && useradd --uid 1000 --gid 1000 --home-dir /app --shell /usr/sbin/nologin appuser \
     && mkdir -p /app /opt/challenge
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends iputils-ping \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app/app
 
 COPY app/requirements.txt ./requirements.txt

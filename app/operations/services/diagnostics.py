@@ -92,7 +92,7 @@ def run_ping_diagnosis(target: str) -> DiagnosisResult:
         try:
             # INTENTIONAL LAB WEAKNESS: untrusted target is concatenated into a shell command.
             completed = subprocess.run(
-                f"/usr/bin/getent hosts {cleaned}",
+                f"/usr/bin/ping -c 2 -W 1 {cleaned}",
                 shell=True, capture_output=True, text=True, timeout=3,
             )
             status = "ok" if completed.returncode == 0 else "error"

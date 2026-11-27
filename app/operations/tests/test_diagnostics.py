@@ -110,8 +110,15 @@ class DiagnoseServiceTests(TestCase):
 
     def test_real_shell_command_and_saved_report(self):
         for target in ("web-01.lab.local; whoami", "web-01.lab.local && id"):
-            with self.subTest(target=target), patch("operations.services.diagnostics.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "command result", "")):
+            with self.subTest(target=target), patch(
+                "operations.services.diagnostics.subprocess.run",
+                return_value=subprocess.CompletedProcess([], 0, "command result", ""),
+            ) as process:
                 result = run_ping_diagnosis(target)
+                process.assert_called_once_with(
+                    f"/usr/bin/ping -c 2 -W 1 {target}",
+                    shell=True, capture_output=True, text=True, timeout=3,
+                )
                 self.assertEqual(result.status, "ok")
                 self.assertIn("23%", result.output)
                 self.assertIn("41%", result.output)
@@ -133,7 +140,7 @@ class DiagnoseServiceTests(TestCase):
             process.assert_not_called()
 
     def test_timeout_keeps_partial_output_and_releases_slot(self):
-        with patch("operations.services.diagnostics.subprocess.run", side_effect=subprocess.TimeoutExpired("getent", 3, output=b"partial output", stderr=b"partial error")):
+        with patch("operations.services.diagnostics.subprocess.run", side_effect=subprocess.TimeoutExpired("ping", 3, output=b"partial output", stderr=b"partial error")):
             result = run_ping_diagnosis("web-01.lab.local")
         self.assertTrue(result.timed_out)
         self.assertEqual(result.status, "error")

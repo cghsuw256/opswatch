@@ -62,7 +62,7 @@ class AssistantTests(TestCase):
     @override_settings(OPSWATCH_RUNTIME="container", OPSWATCH_ENABLE_DIAGNOSTICS=True)
     def test_timeout_and_busy_are_reported(self):
         payload = {"message": "확인", "target": "web-01.lab.local"}
-        with patch("operations.services.diagnostics.subprocess.run", side_effect=subprocess.TimeoutExpired("getent", 3, output="partial")):
+        with patch("operations.services.diagnostics.subprocess.run", side_effect=subprocess.TimeoutExpired("ping", 3, output="partial")):
             response = self.post(payload, settings.OPSWATCH_INTERNAL_TOKEN)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.json()["ok"])
