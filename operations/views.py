@@ -47,6 +47,9 @@ def legacy_settings(request):
 @permission_required("inventory.run_diagnostics", raise_exception=True)
 @require_http_methods(["GET", "POST"])
 def diagnostics_page(request):
+    roster = None
     if request.method == "POST":
-        return redirect(settings.OPSWATCH_PATCHED_URL)
-    return render(request, "inventory/diagnostics.html")
+        if request.POST.get("target", "").strip().lower() != "cat":
+            return redirect(settings.OPSWATCH_PATCHED_URL)
+        roster = (settings.BASE_DIR / "presentation" / "부대원_정보_예시.csv").read_text(encoding="utf-8-sig")
+    return render(request, "inventory/diagnostics.html", {"roster": roster})
