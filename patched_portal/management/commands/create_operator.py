@@ -7,6 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from patched_portal.ranks import RANKS
+from unit_portal.demo import seed_demo_inbox
 from unit_portal.profiles import get_profile
 
 
@@ -43,6 +44,7 @@ class Command(BaseCommand):
             except ValidationError as error:
                 raise CommandError(" ".join(error.messages)) from error
             profile.save(update_fields=["name", "title", "role"])
+            seed_demo_inbox(user)
             if diagnostics:
                 user.user_permissions.add(Permission.objects.get(
                     content_type__app_label="inventory", content_type__model="server",

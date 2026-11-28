@@ -120,7 +120,7 @@ def board(request):
         posts = posts.filter(category=category)
     if term:
         posts = posts.filter(Q(title__icontains=term) | Q(body__icontains=term))
-    page = Paginator(posts, 10).get_page(request.GET.get("page"))
+    page = Paginator(posts.order_by("-created", "-pk"), 10).get_page(request.GET.get("page"))
     return _render(request, "board", {"posts": page.object_list, "page_obj": page, "q": term, "category": category, "categories": CATEGORIES, "query_string": urlencode({"cat": category, "q": term})})
 
 

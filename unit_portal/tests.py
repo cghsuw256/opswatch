@@ -1,8 +1,10 @@
 from datetime import date
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from unit_portal.models import Approval, Event, Post, Profile
 
@@ -105,3 +107,24 @@ class IntranetBoundaryTests(TestCase):
         result = self.client.get(people, {"q": "Directory target", "dept": "Engineering"})
         self.assertContains(result, "Directory target")
         self.assertNotContains(result, "other")
+
+    def test_original_examples_are_available_without_importing_logins(self):
+        self.assertContains(self.client.get(reverse("intranet:notices")), "[필독] 하반기 정보보안 교육 이수 안내")
+        self.assertContains(self.client.get(reverse("intranet:board")), "코드 리뷰 체크리스트 공유합니다")
+        self.assertContains(self.client.get(reverse("intranet:people")), "김지윤")
+        self.assertTrue(Event.objects.filter(title="월간 결산 마감", date=timezone.localdate(), scope="company").exists())
+        example = get_user_model().objects.get(username="example-admin")
+        self.assertFalse(example.is_active)
+        self.assertFalse(example.has_usable_password())
+        self.assertFalse(example.profile.is_admin)
+
+    def test_operations_navigation_keeps_diagnostics_inside_console(self):
+        self.author.user_permissions.add(Permission.objects.get(
+            content_type__app_label="inventory", codename="run_diagnostics",
+        ))
+        self.assertNotContains(self.client.get(reverse("intranet:home")), 'href="/admin/diagnostics/"')
+        self.assertRedirects(Client().get("/dashboard/"), "/login/?next=/dashboard/")
+        self.assertContains(self.client.get("/dashboard/"), 'href="/admin/diagnostics/"')
+        self.assertContains(self.client.get("/support/"), "등록 호스트 상태")
+        self.client.force_login(self.other)
+        self.assertNotContains(self.client.get("/dashboard/"), 'href="/admin/diagnostics/"')

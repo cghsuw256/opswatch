@@ -19,6 +19,7 @@
       <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></symbol>
       <symbol id="i-alert" viewBox="0 0 24 24"><path d="m12 3 10 18H2Z"/><path d="M12 9v5M12 17h.01"/></symbol>
       <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01M12 6.5h5M12 17.5h5"/></symbol>
       <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
       <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
       <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
@@ -39,11 +40,23 @@
       <a class="{% if '/approvals/' in request.path %}active{% endif %}" {% if '/approvals/' in request.path %}aria-current="page"{% endif %} href="{% url 'intranet:approvals' %}"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>결재{% if pending_approval_count %}<span class="shell-count">{{ pending_approval_count }}</span>{% endif %}<span class="nav-arrow" aria-hidden="true">›</span></a>
       <a class="{% if '/calendar/' in request.path %}active{% endif %}" {% if '/calendar/' in request.path %}aria-current="page"{% endif %} href="{% url 'intranet:calendar' %}"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>일정<span class="nav-arrow" aria-hidden="true">›</span></a>
       <a class="{% if '/people/' in request.path %}active{% endif %}" {% if '/people/' in request.path %}aria-current="page"{% endif %} href="{% url 'intranet:people' %}"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>부대원<span class="nav-arrow" aria-hidden="true">›</span></a>
-      <a class="{% if request.path == '/staff/' %}active{% endif %}" {% if request.path == '/staff/' %}aria-current="page"{% endif %} href="{% url 'staff' %}"><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>당직 연락망<span class="nav-arrow" aria-hidden="true">›</span></a>
+      {% with route=request.resolver_match.url_name %}
+      <a href="{% url 'dashboard' %}" {% if route == 'dashboard' or route == 'staff' or route == 'support' or route == 'diagnostics' %}class="active" aria-current="location"{% endif %}><svg class="icon" aria-hidden="true"><use href="#i-server"/></svg>운영 관리<span class="nav-arrow" aria-hidden="true">›</span></a>
+      {% endwith %}
+    </nav>
+    {% with route=request.resolver_match.url_name %}
+    {% if route == 'dashboard' or route == 'staff' or route == 'support' or route == 'diagnostics' %}
+    <p class="nav-section">OPERATIONS CONSOLE</p>
+    <nav class="shell-secondary" aria-label="운영 관리 세부 메뉴">
+      <a href="{% url 'dashboard' %}" {% if route == 'dashboard' %}class="active" aria-current="page"{% endif %}>운영 개요</a>
+      <a href="{% url 'staff' %}" {% if route == 'staff' %}class="active" aria-current="page"{% endif %}>당직 연락망</a>
+      <a href="{% url 'support' %}" {% if route == 'support' %}class="active" aria-current="page"{% endif %}>서비스 상태</a>
       {% if perms.inventory.run_diagnostics %}
-      <a class="{% if request.path == '/admin/diagnostics/' %}active{% endif %}" {% if request.path == '/admin/diagnostics/' %}aria-current="page"{% endif %} href="{% url 'diagnostics' %}"><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>호스트 진단<span class="nav-arrow" aria-hidden="true">›</span></a>
+      <a href="{% url 'diagnostics' %}" {% if route == 'diagnostics' %}class="active" aria-current="page"{% endif %}>호스트 진단</a>
       {% endif %}
     </nav>
+    {% endif %}
+    {% endwith %}
     {% else %}
     <p class="nav-section">국방망 인트라넷</p>
     <nav aria-label="공개 메뉴">

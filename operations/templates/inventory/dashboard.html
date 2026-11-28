@@ -1,0 +1,39 @@
+{% extends "inventory/base.html" %}
+{% block title %}운영 개요 · 국방망 인트라넷{% endblock %}
+{% block page_name %}운영 개요{% endblock %}
+{% block content %}
+<header class="module-head">
+  <div><p class="kicker">Operations Console</p><h1>운영 개요</h1>
+    <p class="module-description">등록 호스트와 저장된 점검 기록을 확인합니다.</p></div>
+</header>
+<section class="card module">
+  <header><h2>등록 호스트</h2></header>
+  <div class="table-scroll">
+    <table class="data">
+      <thead><tr><th scope="col">호스트</th><th scope="col">역할</th><th scope="col">상태</th></tr></thead>
+      <tbody>
+      {% for server in servers %}
+        <tr><td>{{ server.hostname }}</td><td>{{ server.role }}</td><td><span class="status-label {{ server.status }}">{{ server.get_status_display }}</span></td></tr>
+      {% empty %}
+        <tr><td colspan="3">등록된 호스트가 없습니다.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+<section class="card module">
+  <header><h2>최근 점검 기록</h2></header>
+  <div class="table-scroll">
+    <table class="data">
+      <thead><tr><th scope="col">일시</th><th scope="col">호스트</th><th scope="col">점검 내용</th><th scope="col">결과</th></tr></thead>
+      <tbody>
+      {% for inspection in inspections %}
+        <tr><td class="timestamp">{{ inspection.inspected_at|date:"Y-m-d H:i" }}</td><td>{{ inspection.server.hostname }}</td><td>{{ inspection.summary }}</td><td>{% if inspection.passed %}통과{% else %}주의{% endif %}</td></tr>
+      {% empty %}
+        <tr><td colspan="4">저장된 점검 기록이 없습니다.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

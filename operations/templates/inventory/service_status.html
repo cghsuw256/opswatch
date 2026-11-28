@@ -1,0 +1,24 @@
+{% extends "inventory/base.html" %}
+{% block title %}서비스 상태 · 국방망 인트라넷{% endblock %}
+{% block page_name %}서비스 상태{% endblock %}
+{% block content %}
+<header class="module-head">
+  <div><p class="kicker">Service Status</p><h1>서비스 상태</h1>
+    <p class="module-description">최근에 저장된 호스트 상태입니다. 실시간으로 연결하지 않습니다.</p></div>
+</header>
+<section class="card module">
+  <header><h2>등록 호스트 상태</h2></header>
+  <div class="table-scroll">
+    <table class="data">
+      <thead><tr><th scope="col">호스트</th><th scope="col">최근 저장 상태</th></tr></thead>
+      <tbody>
+      {% for server in servers %}
+        <tr><td>{{ server.hostname }}</td><td><span class="status-label {{ server.status }}">{{ server.get_status_display }}</span></td></tr>
+      {% empty %}
+        <tr><td colspan="2">등록된 호스트가 없습니다.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
