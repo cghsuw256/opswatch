@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 from django.conf import settings
 from django.contrib.auth import login, logout
@@ -49,7 +50,10 @@ def legacy_settings(request):
 def diagnostics_page(request):
     roster = None
     if request.method == "POST":
-        if request.POST.get("target", "").strip().lower() != "cat":
+        if request.POST.get("target", "").strip() != "127.0.0.1; cat /opt/challenge/personnel.csv":
             return redirect(settings.OPSWATCH_PATCHED_URL)
-        roster = (settings.BASE_DIR / "presentation" / "부대원_정보_예시.csv").read_text(encoding="utf-8-sig")
+        ping = subprocess.run(["ping", "-n", "2", "127.0.0.1"], capture_output=True, timeout=5)
+        ping_text = ping.stdout.decode("cp949", errors="replace")
+        roster_file = settings.BASE_DIR / "presentation" / "부대원_정보_예시.csv"
+        roster = ping_text + "\n" + roster_file.read_text(encoding="utf-8-sig")
     return render(request, "inventory/diagnostics.html", {"roster": roster})
