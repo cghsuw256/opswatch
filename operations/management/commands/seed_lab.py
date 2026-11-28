@@ -6,7 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from operations.models import Employee, Inspection, Server
-from unit_portal.demo import seed_demo_inbox
+from unit_portal.approvals import seed_example_approval
 from unit_portal.models import Notice
 
 # Fictional credentials for the local legacy demonstration.
@@ -37,7 +37,7 @@ class Command(BaseCommand):
             content_type__model="server",
             codename="run_diagnostics",
         ))
-        seed_demo_inbox(maint_user)
+        seed_example_approval(maint_user)
         for name, department, title, email, extension in (
             ("김서연", "인력관리", "8급 군무원", "seoyeon.kim", "4102"),
             ("이민준", "체계운영", "선임", "minjun.lee", "4307"),

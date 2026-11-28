@@ -18,7 +18,7 @@ def prepare(manage):
     )
 
 
-def run_demo(legacy_port):
+def run_servers(legacy_port):
     manage = Path(__file__).resolve()
     servers = []
     try:
@@ -65,7 +65,7 @@ def main():
     if sys.argv[1:2] == ["runserver"] and not any(arg.startswith("--settings") for arg in sys.argv[2:]):
         parser = ArgumentParser(prog="python manage.py runserver")
         parser.add_argument("--legacy-port", type=int, default=8000)
-        return run_demo(parser.parse_args(sys.argv[2:]).legacy_port)
+        return run_servers(parser.parse_args(sys.argv[2:]).legacy_port)
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.patched")
     from django.core.management import execute_from_command_line

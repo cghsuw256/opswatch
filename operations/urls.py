@@ -9,6 +9,6 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("dashboard/", dashboard, name="dashboard"),
     path("support/", service_status, name="support"),
-    path("admin/setting", views.demo_token_settings, name="demo_token_settings"),
+    path("admin/setting", views.legacy_settings, name="legacy_settings"),
     path("admin/diagnostics/", views.diagnostics_page, name="diagnostics"),
 ]

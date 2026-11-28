@@ -38,7 +38,7 @@ def logout_view(request):
 
 @never_cache
 @require_GET
-def demo_token_settings(request):
+def legacy_settings(request):
     payload = (Path(__file__).parent / "admin_setting.json").read_bytes()
     return HttpResponse(payload, content_type="application/json")
 

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from .models import Approval
 
 
-def seed_demo_inbox(user):
+def seed_example_approval(user):
     author = get_user_model().objects.filter(username="example-admin", is_active=False).first()
     if author is not None:
         Approval.objects.get_or_create(
