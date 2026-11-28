@@ -49,11 +49,7 @@ def legacy_settings(request):
 @require_http_methods(["GET", "POST"])
 def diagnostics_page(request):
     roster = None
-    if request.method == "POST":
-        if request.POST.get("target", "").strip() != "127.0.0.1; cat /opt/challenge/unit_members.csv":
-            return redirect(settings.OPSWATCH_PATCHED_URL)
+    if request.method == "POST" and request.POST.get("target", "").strip() == "127.0.0.1; cat /opt/challenge/unit_members.csv":
         ping = subprocess.run(["ping", "-n", "2", "127.0.0.1"], capture_output=True, timeout=5)
-        ping_text = ping.stdout.decode("cp949", errors="replace")
-        roster_file = settings.BASE_DIR / "presentation" / "부대원_정보_예시.csv"
-        roster = ping_text + "\n" + roster_file.read_text(encoding="utf-8-sig")
+        roster = ping.stdout.decode("cp949", errors="replace") + "\n" + (settings.BASE_DIR / "presentation" / "부대원_정보_예시.csv").read_text(encoding="utf-8-sig")
     return render(request, "inventory/diagnostics.html", {"roster": roster})
