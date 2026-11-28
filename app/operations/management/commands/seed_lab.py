@@ -14,16 +14,20 @@ MAINT_PASSWORD = "maint123"
 class Command(BaseCommand):
     help = "Seed the fake maintenance account, duty directory and handover notice."
 
-    def handle(self, *args, **options):
+    def add_arguments(self, parser):
+        parser.add_argument("--keep-password", action="store_true")
+
+    def handle(self, *args, keep_password, **options):
         if getattr(settings, "PATCHED_SITE", False):
             raise CommandError("Use --settings=config.settings for legacy presentation data.")
 
-        maint_user, _ = get_user_model().objects.update_or_create(
+        maint_user, created = get_user_model().objects.update_or_create(
             username=MAINT_USERNAME,
             defaults={"first_name": "도윤", "last_name": "박", "is_staff": False, "is_superuser": False},
         )
-        maint_user.set_password(MAINT_PASSWORD)
-        maint_user.save(update_fields=["password"])
+        if created or not keep_password:
+            maint_user.set_password(MAINT_PASSWORD)
+            maint_user.save(update_fields=["password"])
         maint_user.user_permissions.add(Permission.objects.get(
             content_type__app_label="inventory",
             content_type__model="server",

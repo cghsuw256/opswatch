@@ -4,31 +4,24 @@
 
 ## 실행
 
-Python 3.10 이상과 SQLite를 사용합니다. Docker나 별도 DB 서버는 필요 없습니다. 저장소 루트에서 아래 PowerShell 명령을 실행합니다.
+Python 3.10 이상이 필요합니다. Django가 설치돼 있지 않으면 `python -m pip install -r app/requirements.txt`를 한 번 실행하세요. 가상환경은 필수가 아닙니다.
 
 ```powershell
-python -m venv .venv
-$python = ".\.venv\Scripts\python.exe"
-& $python -m pip install -r app/requirements.txt
-
-& $python app/manage.py migrate --settings=config.settings
-& $python app/manage.py seed_lab --settings=config.settings
-& $python app/manage.py migrate
-& $python app/manage.py create_operator presenter --name "김준호" --rank "중사" --portal-admin --diagnostics
+python manage.py runserver
 ```
 
-마지막 명령에서 패치 사이트 비밀번호를 두 번 입력합니다. 구형 계정은 가상 시드 계정이며, 패치 사이트로 이관되지 않습니다.
-
-초기 설정이 끝나면 아래 명령 하나로 두 서버를 실행합니다.
-
-```powershell
-.\.venv\Scripts\python.exe app/run_demo.py
-```
+두 SQLite DB의 마이그레이션과 구형 발표 데이터 준비는 실행할 때 자동으로 처리됩니다.
 
 - 구형: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
 - 패치: [http://127.0.0.1:8001/](http://127.0.0.1:8001/)
 
 실행한 터미널에서 `Ctrl+C`를 누르면 둘 다 종료됩니다. SQLite 파일(`legacy.sqlite3`, `patched.sqlite3`)과 세션 쿠키는 사이트별로 분리됩니다.
+
+패치 사이트에 로그인해 진단을 시연하려면 발표 계정을 한 번 발급하세요. 서버 실행 자체에는 필요하지 않습니다.
+
+```powershell
+python manage.py create_operator presenter --name "김준호" --rank "중사" --diagnostics
+```
 
 구형 포트를 바꾸려면 `--legacy-port`를 지정하세요. 패치 사이트는 리다이렉트 대상인 `8001`을 사용합니다.
 
