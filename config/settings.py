@@ -28,4 +28,4 @@ PASSWORD_HASHERS = [
     "unit_portal.hashers.LegacyPBKDF2SHA256PasswordHasher",
 ]
 
-OPSWATCH_PATCHED_URL = "http://127.0.0.1:8001/"
+OPSWATCH_PATCHED_URL = f"http://{os.environ.get('OPSWATCH_PATCHED_HOST', '127.0.0.1')}:8001/"

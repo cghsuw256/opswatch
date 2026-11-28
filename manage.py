@@ -1,8 +1,10 @@
 from argparse import ArgumentParser
+from ipaddress import IPv4Address, IPv4Network
 import os
 import subprocess
 import sys
 from pathlib import Path
+from secrets import token_urlsafe
 from time import sleep
 
 
@@ -18,16 +20,24 @@ def prepare(manage):
     )
 
 
-def run_servers(legacy_port):
+def run_servers(legacy_port, patched_host):
     manage = Path(__file__).resolve()
     servers = []
     try:
         prepare(manage)
         server_env = {**os.environ, "DJANGO_RUNSERVER_HIDE_WARNING": "true"}
-        for port, settings in ((legacy_port, "config.settings"), (8001, "config.patched")):
-            command = [sys.executable, "-u", str(manage), "runserver", f"127.0.0.1:{port}",
+        for host, port, settings in (
+            ("127.0.0.1", legacy_port, "config.settings"),
+            (patched_host, 8001, "config.patched"),
+        ):
+            env = server_env
+            if patched_host != "127.0.0.1":
+                env = {**server_env, "OPSWATCH_PATCHED_HOST": patched_host}
+                if settings == "config.patched":
+                    env.setdefault("DJANGO_SECRET_KEY", token_urlsafe(48))
+            command = [sys.executable, "-u", str(manage), "runserver", f"{host}:{port}",
                        f"--settings={settings}", "--insecure", "--noreload"]
-            servers.append(subprocess.Popen(command, env=server_env))
+            servers.append(subprocess.Popen(command, env=env))
         while True:
             for server in servers:
                 status = server.poll()
@@ -65,7 +75,13 @@ def main():
     if sys.argv[1:2] == ["runserver"] and not any(arg.startswith("--settings") for arg in sys.argv[2:]):
         parser = ArgumentParser(prog="python manage.py runserver")
         parser.add_argument("--legacy-port", type=int, default=8000)
-        return run_servers(parser.parse_args(sys.argv[2:]).legacy_port)
+        parser.add_argument("--lan", type=IPv4Address, help="Private IPv4 address of this PC; opens only the patched site.")
+        args = parser.parse_args(sys.argv[2:])
+        if args.lan is not None and not any(args.lan in IPv4Network(block) for block in (
+            "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16",
+        )):
+            parser.error("--lan requires a private LAN IPv4 address.")
+        return run_servers(args.legacy_port, str(args.lan) if args.lan is not None else "127.0.0.1")
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.patched")
     from django.core.management import execute_from_command_line

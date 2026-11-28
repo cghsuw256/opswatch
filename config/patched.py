@@ -11,6 +11,8 @@ SECRET_KEY = os.environ.get(
 )
 DEBUG = False
 ALLOWED_HOSTS = ["intranet.localhost", "127.0.0.1", "localhost"]
+if lan_host := os.environ.get("OPSWATCH_PATCHED_HOST"):
+    ALLOWED_HOSTS.append(lan_host)
 ROOT_URLCONF = "config.patched_urls"
 INSTALLED_APPS = [*INSTALLED_APPS, "patched_portal"]
 PATCHED_SITE = True
