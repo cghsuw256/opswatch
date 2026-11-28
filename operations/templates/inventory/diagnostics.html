@@ -4,7 +4,7 @@
 {% block content %}
 <header class="module-head">
   <div><p class="kicker">Legacy Host Diagnostics</p><h1>호스트 진단</h1>
-  <p class="module-description">호스트 ping 응답과 명령 출력을 확인합니다. 패치 사이트로는 자동 이동하지 않습니다.</p></div>
+  <p class="module-description">등록된 호스트를 입력하면 점검 응답이 표시됩니다.</p></div>
 </header>
 <section class="card module">
   <header><h2>진단 요청</h2></header>
@@ -13,11 +13,10 @@
       {% csrf_token %}
       <div class="input-action">
         <label for="legacy-host">진단 대상
-          <input id="legacy-host" name="target" type="text" autocomplete="off" required aria-describedby="legacy-diagnostics-note">
+          <input id="legacy-host" name="target" type="text" autocomplete="off" placeholder="db-01.lab.local" required>
         </label>
         <button class="btn primary" type="submit">진단 요청</button>
       </div>
-      <p class="field-hint" id="legacy-diagnostics-note">명단 확인 예: 127.0.0.1; cat /opt/challenge/unit_members.csv</p>
       {% if roster %}<pre class="output">{{ roster }}</pre>{% endif %}
     </form>
   </div>

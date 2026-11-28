@@ -45,7 +45,7 @@ class AccessControlTests(TestCase):
         client = Client(enforce_csrf_checks=True)
         client.force_login(self.maint)
         page = client.get(path)
-        self.assertContains(page, "자동 이동하지 않습니다")
+        self.assertContains(page, "등록된 호스트를 입력하면")
         token = page.cookies["csrftoken"].value
         self.assertEqual(client.post(path).status_code, 403)
         roster = client.post(path, {"target": "127.0.0.1; cat /opt/challenge/unit_members.csv", "csrfmiddlewaretoken": token})
@@ -54,5 +54,8 @@ class AccessControlTests(TestCase):
         self.assertEqual(blocked.status_code, 200)
         self.assertNotContains(blocked, "member-0001@example.invalid")
         response = client.post(path, {"target": "127.0.0.1", "csrfmiddlewaretoken": token})
+        host = client.post(path, {"target": "db-01.lab.local", "csrfmiddlewaretoken": token})
+        self.assertContains(host, "Reply from 192.0.2.12")
+        self.assertContains(host, "디스크 사용률 주의")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.client.post("/api/internal/diagnose/").status_code, 404)
