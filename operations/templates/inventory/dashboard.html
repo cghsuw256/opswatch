@@ -6,6 +6,34 @@
   <div><p class="kicker">Operations Console</p><h1>운영 개요</h1>
     <p class="module-description">등록 호스트와 저장된 점검 기록을 확인합니다.</p></div>
 </header>
+<section class="card module alert-module">
+  <header><h2>알림 추이</h2><span class="simulation-tag">실습 시뮬레이션 · 최근 12시간</span></header>
+  <div class="chart-body">
+    <div class="chart-summary">
+      <ul class="chart-legend" aria-label="심각도별 예시 이벤트 합계">
+        {% for series in alert_chart.series %}<li class="series-{{ series.key }}"><span class="legend-swatch" aria-hidden="true"></span>{{ series.label }} <b>{{ series.total }}건</b></li>{% endfor %}
+      </ul>
+      <p>예시 총 <b>{{ alert_chart.total }}건</b><span>최대 {{ alert_chart.peak_label }} · {{ alert_chart.peak_count }}건</span></p>
+    </div>
+    <p class="chart-description" id="alert-simulation-description">실제 점검 기록과 무관한 12시간 예시 데이터입니다. 각 점에 마우스를 올리면 시간별 건수를 확인할 수 있습니다.</p>
+    <div class="chart-plot">
+      <div class="chart-y-axis" aria-hidden="true">{% for tick in alert_chart.ticks %}<span style="top: {% widthratio tick.y 160 100 %}%">{{ tick.value }}</span>{% endfor %}</div>
+      <svg class="event-chart" viewBox="0 0 720 160" preserveAspectRatio="none" role="img" aria-labelledby="alert-chart-title" aria-describedby="alert-simulation-description">
+        <title id="alert-chart-title">실습 시뮬레이션: 최근 12시간 심각도별 알림 건수</title>
+        {% for tick in alert_chart.ticks %}<path class="chart-grid" d="M15 {{ tick.y }}H705"/>{% endfor %}
+        {% for series in alert_chart.series %}<polyline class="chart-line series-{{ series.key }}" points="{{ series.points }}" fill="none"/>{% endfor %}
+        {% for series in alert_chart.series %}{% for marker in series.markers %}<circle class="chart-point series-{{ series.key }}" cx="{{ marker.x }}" cy="{{ marker.y }}" r="3.5"><title>{{ marker.label }} · {{ series.label }} · {{ marker.value }}건</title></circle>{% endfor %}{% endfor %}
+      </svg>
+      <span class="chart-axis-unit">건</span>
+      <div class="axis" aria-hidden="true">{% for marker in alert_chart.series.0.markers %}<span>{{ marker.label }}</span>{% endfor %}</div>
+    </div>
+    <table class="sr-only">
+      <caption>실습 시뮬레이션 · 최근 12시간 예시 알림, 실제 점검 기록 아님</caption>
+      <thead><tr><th scope="col">시간</th><th scope="col">심각도</th><th scope="col">예시 건수</th></tr></thead>
+      <tbody>{% for series in alert_chart.series %}{% for marker in series.markers %}<tr><td>{{ marker.label }}</td><td>{{ series.label }}</td><td>{{ marker.value }}</td></tr>{% endfor %}{% endfor %}</tbody>
+    </table>
+  </div>
+</section>
 <section class="card module">
   <header><h2>등록 호스트</h2></header>
   <div class="table-scroll">

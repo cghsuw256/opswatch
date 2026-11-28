@@ -34,6 +34,8 @@ python manage.py create_operator presenter --name "김준호" --rank "중사" --
 
 패치 사이트는 `/admin/setting`을 제공하지 않습니다. 관리자도 `404`를 받습니다. 진단은 저장된 점검 기록 조회이며 어느 쪽도 실제 `ping`을 실행하지 않습니다.
 
+운영 개요의 알림 추이는 시뮬레이션 데이터입니다. 시나리오에서 회수한 파일의 예시는 [`presentation/부대원_정보_예시.csv`](presentation/부대원_정보_예시.csv)이며, 웹에서 다운로드되지 않습니다.
+
 ### 같은 내부망에서 패치 사이트 열기
 
 `ipconfig`에서 이 PC의 Wi-Fi 또는 이더넷 IPv4 주소를 확인한 뒤 실행하세요.
