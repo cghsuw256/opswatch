@@ -33,8 +33,6 @@ def run_servers(legacy_port, patched_host):
             env = server_env
             if patched_host != "127.0.0.1":
                 env = {**server_env, "OPSWATCH_PATCHED_HOST": patched_host}
-                if settings == "config.patched":
-                    env.setdefault("DJANGO_SECRET_KEY", token_urlsafe(48))
             command = [sys.executable, "-u", str(manage), "runserver", f"{host}:{port}",
                        f"--settings={settings}", "--insecure", "--noreload"]
             servers.append(subprocess.Popen(command, env=env))

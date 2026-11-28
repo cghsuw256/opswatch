@@ -1,4 +1,4 @@
-"""Patched presentation site with its own local SQLite database."""
+"""Patched presentation site. It uses the same SQLite database and login session as the legacy site."""
 
 import os
 
@@ -7,7 +7,7 @@ from .common import *
 
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
-    "lab-only-patched-signing-key-not-a-database-credential",
+    "lab-only-not-a-real-secret-opswatch-local-exercise",
 )
 DEBUG = False
 ALLOWED_HOSTS = ["intranet.localhost", "127.0.0.1", "localhost"]
@@ -19,7 +19,8 @@ PATCHED_SITE = True
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.environ.get("OPSWATCH_PATCHED_DB", BASE_DIR / "patched.sqlite3"),
+        "NAME": os.environ.get("OPSWATCH_DB", BASE_DIR / "db.sqlite3"),
+        "OPTIONS": {"timeout": 20},
     }
 }
 AUTH_PASSWORD_VALIDATORS = [
@@ -32,6 +33,5 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-SESSION_COOKIE_NAME = "intranet_session"
 CSRF_COOKIE_NAME = "intranet_csrf"
 CSRF_COOKIE_HTTPONLY = True

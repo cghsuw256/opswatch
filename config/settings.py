@@ -18,7 +18,8 @@ ROOT_URLCONF = "config.urls"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.environ.get("OPSWATCH_LEGACY_DB", BASE_DIR / "legacy.sqlite3"),
+        "NAME": os.environ.get("OPSWATCH_DB", BASE_DIR / "db.sqlite3"),
+        "OPTIONS": {"timeout": 20},
     }
 }
 

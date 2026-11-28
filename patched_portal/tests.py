@@ -79,8 +79,7 @@ class PatchedSiteTests(TestCase):
         clock.return_value = 180
         response = self.client.post("/login/", credentials)
         self.assertRedirects(response, "/")
-        self.assertIn("intranet_session", response.cookies)
-        self.assertNotIn("sessionid", response.cookies)
+        self.assertIn("sessionid", response.cookies)
 
     def test_diagnostics_requires_session_permission_and_csrf(self):
         path = "/admin/diagnostics/"
