@@ -1,6 +1,0 @@
-{% extends "intranet/base.html" %}
-{% block title %}기안 작성 · 국방망 인트라넷{% endblock %}
-{% block page_name %}기안 작성{% endblock %}
-{% block intranet_heading %}기안 작성{% endblock %}
-{% block intranet_description %}문서 종류와 결재자를 선택한 뒤 상신합니다. 문서는 기안자·결재자·인트라넷 관리자만 열람할 수 있습니다.{% endblock %}
-{% block intranet_content %}<form method="post" action="{% url 'intranet:approval_new' %}" class="card intra-form">{% csrf_token %}{% include "intranet/fields.html" %}<div class="intra-row"><a class="btn" href="{% url 'intranet:approvals' %}">취소</a><button class="btn primary" type="submit">상신</button></div></form>{% endblock %}

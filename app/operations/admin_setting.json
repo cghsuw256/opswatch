@@ -1,14 +1,11 @@
 {
+  "example_only": true,
   "database": {
     "engine": "postgresql",
-    "host": "opswatch.net",
+    "host": "db.example.invalid",
     "port": 5432,
     "name": "opswatch",
     "username": "opswatch",
     "password": "p@ssw0rd"
-  },
-  "maintenance_account": {
-    "username": "maint",
-    "password": "maint123"
   }
 }

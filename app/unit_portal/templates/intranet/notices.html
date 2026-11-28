@@ -3,7 +3,6 @@
 {% block page_name %}공지사항{% endblock %}
 {% block intranet_heading %}공지사항{% endblock %}
 {% block intranet_description %}부대의 주요 안내와 공지사항을 확인합니다.{% endblock %}
-{% block intranet_actions %}{% if is_intranet_admin %}<a class="btn primary" href="{% url 'intranet:notice_new' %}">공지 작성</a>{% endif %}{% endblock %}
 {% block intranet_content %}
 <section class="card"><div class="table-scroll"><table class="data intra-table"><caption class="sr-only">부대 공지사항 목록</caption><thead><tr><th scope="col">번호</th><th scope="col">제목</th><th scope="col">작성자</th><th scope="col">등록일</th></tr></thead><tbody>{% for notice in notices %}<tr><td>{% if notice.pinned %}<span class="intra-tag intra-pin">고정</span>{% else %}{{ notice.pk }}{% endif %}</td><td class="title"><a href="{% url 'intranet:notice_detail' notice.pk %}">{{ notice.title }}</a></td><td>{{ notice.author.profile.name|default:notice.author.username }}</td><td class="timestamp"><time datetime="{{ notice.created|date:'c' }}">{{ notice.created|date:"Y-m-d" }}</time></td></tr>{% empty %}<tr><td colspan="4"><p class="intra-empty">공지가 없습니다.</p></td></tr>{% endfor %}</tbody></table></div></section>
 {% endblock %}

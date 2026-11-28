@@ -5,5 +5,5 @@
 {% block intranet_description %}부대 공지의 상세 내용을 확인합니다.{% endblock %}
 {% block intranet_content %}
 <article class="card intra-document"><h2>{% if notice.pinned %}<span class="intra-tag intra-pin">고정</span>{% endif %}{{ notice.title }}</h2><div class="intra-meta"><span>{{ notice.author.profile.name|default:notice.author.username }} · {{ notice.author.profile.dept }}</span><time datetime="{{ notice.created|date:'c' }}">{{ notice.created|date:"Y-m-d H:i" }}</time></div><div class="intra-text">{{ notice.body|linebreaks }}</div></article>
-<div class="intra-row"><a class="btn" href="{% url 'intranet:notices' %}">목록</a>{% if can_delete %}<form method="post" action="{% url 'intranet:notice_delete' notice.pk %}">{% csrf_token %}<button class="btn danger" type="submit">공지 삭제</button></form>{% endif %}</div>
+<div class="intra-row"><a class="btn" href="{% url 'intranet:notices' %}">목록</a></div>
 {% endblock %}

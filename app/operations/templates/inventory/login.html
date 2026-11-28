@@ -9,9 +9,9 @@
       <span><strong>국방망 인트라넷</strong><small>{% if patched_site %}신규 시스템{% else %}NETWORK OPERATIONS{% endif %}</small></span>
     </div>
     <div class="auth-message">
-      <p class="kicker">Infrastructure Management</p>
-      <h2>체계적인 망운용,<br>통합된 운영 환경.</h2>
-      <p>운영 현황부터 호스트 진단까지.<br>망운용에 필요한 정보를 하나의 콘솔에서 관리합니다.</p>
+      <p class="kicker">OpsWatch</p>
+      <h2>국방망 인트라넷</h2>
+      <p>{% if patched_site %}패치 적용본{% else %}구형 발표본{% endif %}</p>
       <svg class="network-visual" viewBox="0 0 350 140" fill="none" aria-hidden="true">
         <path class="network-link" d="M40 35h80l55 35 55-35h80M40 105h80l55-35 55 35h80M175 70V8M175 70v62"/>
         <circle class="network-center" cx="175" cy="70" r="20"/>
@@ -35,6 +35,7 @@
       {% endif %}
       <form method="post" action="{% url 'login' %}" novalidate>
         {% csrf_token %}
+        {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
         <label>아이디<input type="text" name="username" autocomplete="username" placeholder="계정 아이디" required></label>
         <label>비밀번호<input type="password" name="password" autocomplete="current-password" placeholder="비밀번호 입력" required></label>
         <button class="btn primary" type="submit">로그인 <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>

@@ -1,51 +1,31 @@
 {% extends "inventory/base.html" %}
-{% load static %}
 {% block title %}호스트 진단 · 국방망 인트라넷{% endblock %}
 {% block page_name %}호스트 진단{% endblock %}
 {% block content %}
 <header class="module-head">
-  <div><p class="kicker">Host Status</p><h1>호스트 진단</h1><p class="module-description">호스트 ping 응답과 등록된 운영 상태 및 최근 점검 기록을 확인합니다.</p></div>
-  <span class="page-tag"><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>운영 도구</span>
+  <div><p class="kicker">Legacy Host Diagnostics</p><h1>호스트 진단</h1>
+  <p class="module-description">진단을 요청하면 명령을 실행하지 않고 패치 사이트로 이동합니다.</p></div>
 </header>
-{% if not diagnostics_enabled %}
-  <p class="flash warn">호스트 진단은 비활성화되어 있습니다. 진단 실행이 허용된 격리 컨테이너에서만 사용할 수 있습니다.</p>
-{% endif %}
-{% if not diagnostics_token %}
-  <p class="flash warn"><a href="{% url 'support' %}">에이전트 상태를 조회</a>하여 현재 로그인 세션의 운영 도구를 활성화하세요.</p>
-{% endif %}
-<div class="tool-grid">
-  <section class="card">
-    <header><h2><svg class="icon" aria-hidden="true"><use href="#i-terminal"/></svg>진단 요청</h2><span class="panel-meta">PING CHECK</span></header>
-    <div class="card-body">
-      <form id="diagnose-form">
-        {% csrf_token %}
-        <div class="input-action">
-          <label>진단 대상<input type="text" name="target" placeholder="web-01.lab.local" aria-describedby="target-hint" required{% if not diagnostics_enabled or not diagnostics_token %} disabled{% endif %}></label>
-          <button class="btn primary" type="submit"{% if not diagnostics_enabled or not diagnostics_token %} disabled{% endif %}><svg class="icon" aria-hidden="true"><use href="#i-pulse"/></svg>진단 실행</button>
-        </div>
-        <p class="field-hint" id="target-hint">ping을 보낼 호스트 이름 또는 IP 주소를 입력하세요. 예: web-01.lab.local</p>
-      </form>
-    </div>
-    <div class="result-section">
-      <div class="result-heading"><h3>실행 결과 / OUTPUT</h3><p id="diag-status" role="status" aria-live="polite">{% if not diagnostics_enabled %}실행 비활성화{% elif diagnostics_token %}대기{% else %}에이전트 상태 조회 필요{% endif %}</p></div>
-      <pre id="diag-output" class="output" aria-label="호스트 진단 출력" hidden></pre>
-    </div>
-  </section>
-  <aside class="card">
-    <header><h2>진단 정보</h2></header>
-    <div class="card-body">
-      <dl class="detail-list">
-        <div><dt>진단 방식</dt><dd>컨테이너 내 ping 실행</dd></div>
-        <div><dt>API 인증</dt><dd>로그인 세션 · 진단 실행 권한 · 내부 토큰</dd></div>
-        <div><dt>활성화 상태</dt><dd>{% if not diagnostics_enabled %}실행 비활성화{% elif diagnostics_token %}활성화됨{% else %}에이전트 상태 조회 필요{% endif %}</dd></div>
-        <div><dt>결과 형식</dt><dd>호스트 보고서 및 명령 출력</dd></div>
-      </dl>
-    </div>
-    <footer class="panel-footer"><a href="{% url 'support' %}">에이전트 상태 조회 →</a></footer>
-  </aside>
-</div>
-{% endblock %}
-{% block scripts %}
-{{ diagnostics_token|json_script:"diagnostics-token" }}
-<script src="{% static 'opswatch/diagnostics.js' %}?v=20261116-container-diagnostics"></script>
+<section class="card module">
+  <header><h2>진단 요청</h2></header>
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="input-action">
+        <label for="legacy-host">진단 대상
+          <input id="legacy-host" type="text" autocomplete="off" required aria-describedby="legacy-diagnostics-note">
+        </label>
+        <button class="btn primary" type="submit">진단 요청</button>
+      </div>
+      <p class="field-hint" id="legacy-diagnostics-note">입력값은 서버로 보내지 않습니다.</p>
+    </form>
+  </div>
+</section>
+<section class="card module">
+  <header><h2>기존 방식의 문제</h2></header>
+  <div class="card-body">
+    <p>구형 서버는 사용자가 입력한 호스트 주소를 셸 명령 문자열에 결합해 진단했습니다. 이 구조에서는 주소와 셸 문법이 분리되지 않습니다.</p>
+    <p>패치 서버는 등록된 호스트의 점검 기록만 조회합니다.</p>
+  </div>
+</section>
 {% endblock %}

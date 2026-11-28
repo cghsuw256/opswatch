@@ -1,6 +1,0 @@
-{% extends "intranet/base.html" %}
-{% block title %}글쓰기 · 국방망 인트라넷{% endblock %}
-{% block page_name %}글쓰기{% endblock %}
-{% block intranet_heading %}글쓰기{% endblock %}
-{% block intranet_description %}분류를 선택하고 공유할 내용을 작성합니다.{% endblock %}
-{% block intranet_content %}<form method="post" action="{% url 'intranet:post_new' %}" class="card intra-form">{% csrf_token %}{% include "intranet/fields.html" %}<div class="intra-row"><a class="btn" href="{% url 'intranet:board' %}">취소</a><button class="btn primary" type="submit">게시글 등록</button></div></form>{% endblock %}

@@ -5,8 +5,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.db import transaction
-from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
@@ -36,19 +36,23 @@ def _login_retry_after(source):
 def sign_in(request):
     if request.user.is_authenticated:
         return redirect("intranet:home")
+    next_url = request.POST.get("next", request.GET.get("next", ""))
+    if not next_url.startswith("/") or not url_has_allowed_host_and_scheme(next_url, allowed_hosts=set()):
+        next_url = ""
+    context = {"next_url": next_url}
     if request.method == "POST":
         retry_after = _login_retry_after(request.META.get("REMOTE_ADDR") or "unknown")
         if retry_after:
-            response = render(request, "inventory/login.html", {"login_throttled": True}, status=429)
+            response = render(request, "inventory/login.html", {**context, "login_throttled": True}, status=429)
             response["Retry-After"] = str(retry_after)
             return response
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             login(request, form.get_user())
-            return redirect("intranet:home")
+            return redirect(next_url or "intranet:home")
     else:
         form = AuthenticationForm(request)
-    return render(request, "inventory/login.html", {"form": form})
+    return render(request, "inventory/login.html", {**context, "form": form})
 
 
 @require_POST
@@ -58,21 +62,9 @@ def sign_out(request):
 
 
 @require_GET
-def health(request):
-    return JsonResponse({"status": "ok"})
-
-
-@require_GET
 def staff(request):
     employees = Employee.objects.values("name", "department", "title", "extension")
     return render(request, "inventory/staff.html", {"employees": employees})
-
-
-@login_required
-@require_GET
-def status(request):
-    servers = Server.objects.only("hostname", "status")
-    return render(request, "patched_portal/status.html", {"servers": servers})
 
 
 class HostForm(forms.Form):

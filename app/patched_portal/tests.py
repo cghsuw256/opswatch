@@ -35,18 +35,25 @@ class PatchedSiteTests(TestCase):
                 self.assertEqual(self.client.get(path).status_code, 404)
                 self.assertEqual(self.client.post(path).status_code, 404)
 
-    def test_settings_exposes_only_database_engine_to_portal_admin(self):
+    def test_settings_route_is_absent_for_every_role(self):
         path = "/admin/setting"
-        self.assertRedirects(self.client.get(path), "/login/?next=/admin/setting")
-        self.client.force_login(self.operator)
-        self.assertEqual(self.client.get(path).status_code, 403)
+        self.assertEqual(self.client.get(path).status_code, 404)
+        self.client.force_login(self.reader)
+        self.assertEqual(self.client.get(path).status_code, 404)
         profile = self.operator.profile
         profile.role = "admin"
         profile.save(update_fields=["role"])
-        response = self.client.get(path)
-        self.assertEqual(response.json(), {"database": {"engine": "sqlite3"}})
-        self.assertIn("no-store", response["Cache-Control"])
-        self.assertEqual(self.client.post(path).status_code, 405)
+        self.client.force_login(self.operator)
+        self.assertEqual(self.client.get(path).status_code, 404)
+        self.assertEqual(self.client.post(path).status_code, 404)
+
+    def test_login_rejects_external_return_url(self):
+        response = self.client.post("/login/", {
+            "username": self.operator.username,
+            "password": self.password,
+            "next": "//example.invalid/",
+        })
+        self.assertRedirects(response, "/")
 
     def test_public_directory_keeps_rank_but_not_authentication_fields(self):
         Employee.objects.create(name="정지훈", department="운영", title="중사", extension="4511",
@@ -109,5 +116,4 @@ class PatchedSiteTests(TestCase):
             call_command("create_operator", *args, stdout=StringIO())
         response = self.client.post("/login/", {"username": "supporter", "password": self.password}, follow=True)
         self.assertContains(response, "8급 군무원 최보라")
-        self.assertContains(self.client.get("/people/", {"q": "군무원"}), "최보라")
         self.assertEqual(self.client.get("/admin/diagnostics/").status_code, 200)
