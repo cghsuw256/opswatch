@@ -4,7 +4,7 @@
 
 ## 실행
 
-Python 3.10 이상이 필요합니다. Django가 설치돼 있지 않으면 `python -m pip install -r requirements.txt`를 한 번 실행하세요. 가상환경은 필수가 아닙니다.
+Python 3.10 이상이 필요합니다. 프로젝트에 `.venv`가 있으면 자동으로 사용하며 활성화할 필요는 없습니다. `.venv`가 없고 현재 Python에 맞는 Django 버전이 설치돼 있지 않으면 `python -m pip install -r requirements.txt`를 한 번 실행하세요.
 
 ```powershell
 python manage.py runserver
@@ -24,6 +24,8 @@ python manage.py create_operator presenter --name "김준호" --rank "중사" --
 ```
 
 구형 포트를 바꾸려면 `--legacy-port`를 지정하세요. 패치 사이트는 리다이렉트 대상인 `8001`을 사용합니다.
+
+이전 Docker 실습 서버가 `8000`을 점유하면 `docker stop opswatch-lab-web-1`로 그 컨테이너만 종료한 뒤 다시 실행하세요.
 
 발표 때 구형 사이트로 먼저 접속하세요. 유지보수 계정으로 로그인한 뒤 **호스트 진단**에서 텍스트를 입력하고 `Enter` 또는 **진단 요청**을 누르면 패치 사이트로 자동 이동합니다. 입력값은 전송하거나 실행하지 않으며, 패치 사이트는 별도로 로그인합니다.
 

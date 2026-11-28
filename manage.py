@@ -45,7 +45,22 @@ def run_demo(legacy_port):
             server.wait()
 
 
+def project_python():
+    root = Path(__file__).resolve().parent
+    relative = "Scripts/python.exe" if os.name == "nt" else "bin/python"
+    interpreter = root / ".venv" / relative
+    if interpreter.is_file() and Path(sys.prefix).resolve() != interpreter.parent.parent:
+        return interpreter
+    return None
+
+
 def main():
+    if interpreter := project_python():
+        try:
+            return subprocess.call([str(interpreter), str(Path(__file__).resolve()), *sys.argv[1:]])
+        except KeyboardInterrupt:
+            return 0
+
     if sys.argv[1:2] == ["runserver"] and not any(arg.startswith("--settings") for arg in sys.argv[2:]):
         parser = ArgumentParser(prog="python manage.py runserver")
         parser.add_argument("--legacy-port", type=int, default=8000)
