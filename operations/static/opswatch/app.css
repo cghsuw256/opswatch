@@ -147,6 +147,8 @@ input:disabled { background: var(--bg); color: var(--muted); cursor: not-allowed
 .input-action .btn { min-height: 42px; flex-shrink: 0; }
 .flash { padding: 12px 15px; border: 1px solid var(--line); background: #f7f9fc; border-radius: 5px; font-size: 12px; margin: 0 0 20px; }
 .flash.error { background: #fdf1f1; border-color: #f0d5d5; color: var(--bad); }
+.diagnostic-command { display: block; padding: 10px 12px; overflow-x: auto; border: 1px solid #dce4ef; border-radius: 5px; background: #f4f7fb; color: #3e5678; font: 11px/1.6 var(--mono); white-space: nowrap; }
+.output { max-height: 420px; margin: 16px 0 0; padding: 16px; overflow: auto; border: 1px solid #25374d; border-radius: 5px; background: #122033; color: #dce7f5; font: 12px/1.65 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; }
 body.login-page { background: #fff; }
 .login-page .mast, .login-page .topbar { display: none; }
 .login-page .workspace { padding: 0; margin: 0; }
