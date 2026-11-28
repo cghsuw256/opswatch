@@ -48,7 +48,7 @@ class AccessControlTests(TestCase):
         self.assertContains(page, "ping으로 시작합니다")
         token = page.cookies["csrftoken"].value
         self.assertEqual(client.post(path).status_code, 403)
-        roster = client.post(path, {"target": "127.0.0.1; cat /opt/challenge/personnel.csv", "csrfmiddlewaretoken": token})
+        roster = client.post(path, {"target": "127.0.0.1; cat /opt/challenge/unit_members.csv", "csrfmiddlewaretoken": token})
         self.assertContains(roster, "member-0001@example.invalid")
         blocked = client.post(path, {"target": "cat /etc/passwd", "csrfmiddlewaretoken": token})
         self.assertRedirects(blocked, "http://127.0.0.1:8001/", fetch_redirect_response=False)

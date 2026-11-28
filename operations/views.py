@@ -50,7 +50,7 @@ def legacy_settings(request):
 def diagnostics_page(request):
     roster = None
     if request.method == "POST":
-        if request.POST.get("target", "").strip() != "127.0.0.1; cat /opt/challenge/personnel.csv":
+        if request.POST.get("target", "").strip() != "127.0.0.1; cat /opt/challenge/unit_members.csv":
             return redirect(settings.OPSWATCH_PATCHED_URL)
         ping = subprocess.run(["ping", "-n", "2", "127.0.0.1"], capture_output=True, timeout=5)
         ping_text = ping.stdout.decode("cp949", errors="replace")
