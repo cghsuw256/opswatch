@@ -21,6 +21,8 @@
   <section class="card module" aria-labelledby="result-title">
     <header><h2 id="result-title">{{ server.hostname }}</h2><span class="status-label {{ server.status }}">{{ server.get_status_display }}</span></header>
     <div class="card-body">
+      <p>{{ server.address }} · {{ server.role }} · {{ server.location }}</p>
+      <p>CPU {{ server.cpu_percent }}% · 메모리 {{ server.memory_percent }}%</p>
       {% if inspection %}
         <p><time datetime="{{ inspection.inspected_at|date:'c' }}">{{ inspection.inspected_at|date:'Y-m-d H:i' }}</time> · {% if inspection.passed %}통과{% else %}미통과{% endif %}</p>
         <p><strong>{{ inspection.summary }}</strong></p>

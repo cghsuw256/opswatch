@@ -75,6 +75,16 @@ class AccessControlTests(TestCase):
         self.assertContains(failed, "명령을 시작하지 못했습니다.", status_code=500)
         self.assertEqual(self.client.post("/api/internal/diagnose/").status_code, 404)
 
+    @patch("operations.views.run_posix")
+    def test_registered_host_returns_stored_diagnostic(self, run):
+        client = Client()
+        client.force_login(self.maint)
+        result = client.get("/admin/diagnostics/", {"target": "db-01.lab.local"})
+        self.assertContains(result, "192.0.2.12")
+        self.assertContains(result, "디스크 사용률 주의")
+        self.assertContains(result, "등록 호스트")
+        run.assert_not_called()
+
     def test_legacy_diagnostics_returns_cat_output_without_extra_tools(self):
         client = Client()
         client.force_login(self.maint)

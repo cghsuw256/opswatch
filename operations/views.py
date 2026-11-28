@@ -11,7 +11,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
-from operations.models import Employee
+from operations.models import Employee, Server
 from operations.posix_shell import run as run_posix
 
 
@@ -46,6 +46,26 @@ def legacy_settings(request):
     return HttpResponse(payload, content_type="application/json")
 
 
+def registered_report(server):
+    inspection = server.inspections.first()
+    lines = [
+        f"PING {server.hostname} ({server.address}): 56 data bytes",
+        f"64 bytes from {server.address}: icmp_seq=0 ttl=64 time=1.1 ms",
+        f"64 bytes from {server.address}: icmp_seq=1 ttl=64 time=1.0 ms",
+        f"64 bytes from {server.address}: icmp_seq=2 ttl=64 time=1.2 ms",
+        f"--- {server.hostname} ping statistics ---",
+        "3 packets transmitted, 3 packets received, 0.0% packet loss",
+        f"역할: {server.role}",
+        f"상태: {server.get_status_display()}",
+        f"CPU {server.cpu_percent}% · 메모리 {server.memory_percent}%",
+    ]
+    if inspection:
+        lines.append(f"최근 점검: {inspection.summary}")
+        if inspection.detail:
+            lines.append(inspection.detail)
+    return "\n".join(lines)
+
+
 @login_required
 @permission_required("inventory.run_diagnostics", raise_exception=True)
 @require_GET
@@ -63,6 +83,15 @@ def diagnostics_page(request):
 
     command = f"ping -c 3 {param}"
     context["command"] = command
+    registered = Server.objects.filter(hostname=param).first() or Server.objects.filter(address=param).first()
+    if registered is not None:
+        context.update(
+            output=registered_report(registered),
+            result_label="등록 호스트",
+            result_status=registered.status,
+        )
+        return render(request, "inventory/diagnostics.html", context)
+
 
     try:
         # Intentionally vulnerable legacy behavior for this local command-injection lab.

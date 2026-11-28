@@ -67,8 +67,13 @@ def staff(request):
     return render(request, "inventory/staff.html", {"employees": employees})
 
 
+class HostChoice(forms.ModelChoiceField):
+    def label_from_instance(self, server):
+        return f"{server.hostname} · {server.address}"
+
+
 class HostForm(forms.Form):
-    server = forms.ModelChoiceField(label="등록 호스트", queryset=Server.objects.all())
+    server = HostChoice(label="등록 호스트", queryset=Server.objects.all())
 
 
 @never_cache
