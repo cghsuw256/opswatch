@@ -13,7 +13,7 @@
       <form method="get" action="{% url 'diagnostics' %}">
         <div class="input-action">
           <label>진단 대상
-            <input name="target" value="{{ target }}" placeholder="127.0.0.1; cat /opt/opswatch/data/unit_members.csv" autocomplete="off" required>
+            <input name="target" value="{{ target }}" autocomplete="off" required>
           </label>
           <button class="btn primary" type="submit">명령 실행</button>
         </div>
