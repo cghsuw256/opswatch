@@ -5,6 +5,7 @@
 {% block content %}
 <header class="module-head">
   <div><p class="kicker">Unit Intranet</p><h1>{% block intranet_heading %}인트라넷{% endblock %}</h1><p class="module-description">{% block intranet_description %}부대의 소식과 업무를 한곳에서 확인합니다.{% endblock %}</p></div>
+  <div class="intra-actions">{% block intranet_actions %}{% endblock %}</div>
 </header>
 {% if messages %}<div aria-live="polite">{% for message in messages %}<p class="flash {{ message.tags }}"{% if message.tags == 'error' %} role="alert"{% endif %}>{{ message }}</p>{% endfor %}</div>{% endif %}
 {% block intranet_content %}{% endblock %}

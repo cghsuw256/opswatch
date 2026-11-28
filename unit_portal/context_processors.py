@@ -1,5 +1,6 @@
 from django.conf import settings
 
+from .models import Approval
 from .profiles import get_profile
 
 
@@ -11,4 +12,6 @@ def intranet_shell(request):
     return {
         **site,
         "profile": profile,
+        "is_intranet_admin": profile.is_admin,
+        "pending_approval_count": Approval.objects.filter(approver=request.user, status="pending").count(),
     }

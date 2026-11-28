@@ -13,7 +13,7 @@ def prepare(manage):
             check=True,
         )
     subprocess.run(
-        [sys.executable, str(manage), "seed_lab", "--keep-password", "--settings=config.settings"],
+        [sys.executable, str(manage), "seed_lab", "--keep-password", "--verbosity=0", "--settings=config.settings"],
         check=True,
     )
 
@@ -23,10 +23,11 @@ def run_demo(legacy_port):
     servers = []
     try:
         prepare(manage)
+        server_env = {**os.environ, "DJANGO_RUNSERVER_HIDE_WARNING": "true"}
         for port, settings in ((legacy_port, "config.settings"), (8001, "config.patched")):
             command = [sys.executable, "-u", str(manage), "runserver", f"127.0.0.1:{port}",
                        f"--settings={settings}", "--insecure", "--noreload"]
-            servers.append(subprocess.Popen(command))
+            servers.append(subprocess.Popen(command, env=server_env))
         while True:
             for server in servers:
                 status = server.poll()

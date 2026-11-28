@@ -2,6 +2,7 @@
 .shell-skip:focus { transform: none; }
 .mast { overflow-y: auto; }
 .mast .nav-section { margin-top: 18px; }
+.shell-count { margin-left: auto; padding: 1px 6px; border-radius: 4px; background: #365682; color: #fff; font-size: 10px; }
 .shell-profile { color: var(--ink); }
 .shell-profile:hover strong { color: var(--accent); }
 .shell-mobile-profile { display: none; }

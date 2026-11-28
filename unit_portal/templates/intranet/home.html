@@ -2,11 +2,19 @@
 {% block title %}홈 · 국방망 인트라넷{% endblock %}
 {% block page_name %}홈{% endblock %}
 {% block intranet_heading %}홈{% endblock %}
-{% block intranet_description %}OpsWatch 발표용 {% if patched_site %}패치{% else %}구형{% endif %} 사이트입니다.{% endblock %}
+{% block intranet_description %}오늘의 소식과 나의 업무 현황입니다.{% endblock %}
 {% block intranet_content %}
-<section class="card intra-hero"><div><h2>{{ profile.title }} {{ profile.name|default:user.username }} 님, 환영합니다</h2><p>{{ profile.dept }}</p></div></section>
-<section class="card">
-  <header><h2>공지사항</h2><a href="{% url 'intranet:notices' %}">전체 보기</a></header>
-  <ul class="intra-list">{% for notice in notices %}<li><a href="{% url 'intranet:notice_detail' notice.pk %}">{{ notice.title }}</a></li>{% empty %}<li class="intra-empty">공지가 없습니다.</li>{% endfor %}</ul>
+<section class="card intra-hero"><div><h2>{{ profile.title }} {{ profile.name|default:user.username }} 님, 환영합니다</h2><p>{{ today|date:"Y년 n월 j일 l" }} · {{ profile.dept }}</p></div><a class="btn primary" href="{% url 'intranet:approval_new' %}">기안 작성</a></section>
+<section class="kpi-row" aria-label="내 업무 요약">
+  <article><a class="intra-stat" href="{% url 'intranet:approvals' %}"><span class="metric-label">결재 대기</span><strong>{{ inbox_count }}</strong><span class="metric-note">받은 결재함 확인</span></a><span class="metric-icon amber"><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg></span></article>
+  <article><a class="intra-stat" href="{% url 'intranet:approvals' %}?tab=sent"><span class="metric-label">내 기안 진행 중</span><strong>{{ mine_count }}</strong><span class="metric-note">내 기안 문서 확인</span></a><span class="metric-icon"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg></span></article>
+  <article><a class="intra-stat" href="{% url 'intranet:calendar' %}"><span class="metric-label">오늘 일정</span><strong>{{ today_event_count }}</strong><span class="metric-note">부대 및 개인 일정</span></a><span class="metric-icon teal"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></span></article>
+  <article><a class="intra-stat" href="{% url 'intranet:notices' %}"><span class="metric-label">이번 주 새 공지</span><strong>{{ new_notice_count }}</strong><span class="metric-note">최근 7일 등록 공지</span></a><span class="metric-icon"><svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg></span></article>
 </section>
+<div class="intra-grid">
+<section class="card"><header><h2>공지사항</h2><a href="{% url 'intranet:notices' %}">전체 보기</a></header><ul class="intra-list">{% for notice in notices %}<li><a href="{% url 'intranet:notice_detail' notice.pk %}">{% if notice.pinned %}<span class="intra-tag intra-pin">고정</span>{% endif %}{{ notice.title }}</a><time datetime="{{ notice.created|date:'c' }}">{{ notice.created|date:"m-d" }}</time></li>{% empty %}<li class="intra-empty">공지가 없습니다.</li>{% endfor %}</ul></section>
+<section class="card"><header><h2>결재 대기함</h2><a href="{% url 'intranet:approvals' %}">전체 보기</a></header><ul class="intra-list">{% for approval in pending_approvals %}<li><a href="{% url 'intranet:approval_detail' approval.pk %}"><span class="intra-tag">{{ approval.kind }}</span>{{ approval.title }}</a><span class="muted">{{ approval.drafter.profile.name|default:approval.drafter.username }}</span></li>{% empty %}<li class="intra-empty">결재할 문서가 없습니다.</li>{% endfor %}</ul></section>
+<section class="card"><header><h2>다가오는 일정</h2><a href="{% url 'intranet:calendar' %}">달력 보기</a></header><ul class="intra-agenda">{% for event in events %}<li><time class="intra-date" datetime="{{ event.date|date:'Y-m-d' }}"><b>{{ event.date|date:"d" }}</b>{{ event.date|date:"n" }}월</time><div class="intra-grow">{{ event.title }}<small>{{ event.time|time:"H:i"|default:"종일" }}{% if event.place %} · {{ event.place }}{% endif %} · {{ event.get_scope_display }}</small></div></li>{% empty %}<li class="intra-empty">예정된 일정이 없습니다.</li>{% endfor %}</ul></section>
+<section class="card"><header><h2>최근 게시글</h2><a href="{% url 'intranet:board' %}">전체 보기</a></header><ul class="intra-list">{% for post in posts %}<li><a href="{% url 'intranet:post_detail' post.pk %}"><span class="intra-tag">{{ post.category }}</span>{{ post.title }}{% if post.comment_count %} <span class="count-badge">{{ post.comment_count }}</span>{% endif %}</a><time datetime="{{ post.created|date:'c' }}">{{ post.created|date:"m-d" }}</time></li>{% empty %}<li class="intra-empty">게시글이 없습니다.</li>{% endfor %}</ul></section>
+</div>
 {% endblock %}

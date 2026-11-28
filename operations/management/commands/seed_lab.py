@@ -57,4 +57,5 @@ class Command(BaseCommand):
             },
         )
 
-        self.stdout.write(self.style.SUCCESS("Legacy presentation data is ready (fake data only)."))
+        if options["verbosity"]:
+            self.stdout.write(self.style.SUCCESS("Legacy presentation data is ready (fake data only)."))

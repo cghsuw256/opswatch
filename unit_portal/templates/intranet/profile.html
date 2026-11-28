@@ -2,18 +2,10 @@
 {% block title %}내 정보 · 국방망 인트라넷{% endblock %}
 {% block page_name %}내 정보{% endblock %}
 {% block intranet_heading %}내 정보{% endblock %}
-{% block intranet_description %}로그인 계정의 비밀번호를 변경합니다.{% endblock %}
+{% block intranet_description %}연락처를 최신 상태로 유지하고 계정 비밀번호를 관리합니다.{% endblock %}
 {% block intranet_content %}
-<form method="post" action="{% url 'intranet:password' %}" class="card intra-form">
-  <h2>비밀번호 변경</h2>
-  {% csrf_token %}
-  {% for field in password_form %}
-    <div class="intra-field{% if field.errors %} has-error{% endif %}">
-      {{ field.label_tag }}{{ field }}
-      {% if field.help_text %}<div class="field-hint" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>{% endif %}
-      {% if field.errors %}<div class="intra-errors" id="{{ field.auto_id }}_error" role="alert">{{ field.errors }}</div>{% endif %}
-    </div>
-  {% endfor %}
-  <button class="btn primary" type="submit">비밀번호 변경</button>
-</form>
+<div class="intra-grid">
+<form method="post" action="{% url 'intranet:profile' %}" class="card intra-form"><h2>내 정보</h2><div class="intra-profile"><span class="intra-avatar" aria-hidden="true">{{ profile.name|default:user.username|slice:":1" }}</span><div><strong>{{ profile.title }} {{ profile.name|default:user.username }}</strong><small>{{ profile.dept }}{% if profile.email %} · {{ profile.email }}{% endif %}</small><small>전입일 {{ profile.joined|date:"Y-m-d"|default:"미등록" }}{% if is_intranet_admin %} · 인트라넷 관리자{% endif %}</small><small>계정 {{ user.username }}</small></div></div>{% csrf_token %}{% include "intranet/fields.html" %}<button class="btn primary" type="submit">연락처 저장</button></form>
+<form method="post" action="{% url 'intranet:password' %}" class="card intra-form"><h2>비밀번호 변경</h2><p class="muted">인트라넷과 운영 관리에 함께 사용하는 계정의 비밀번호가 변경됩니다.</p>{% csrf_token %}{% include "intranet/fields.html" with form=password_form %}<button class="btn primary" type="submit">비밀번호 변경</button></form>
+</div>
 {% endblock %}
