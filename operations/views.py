@@ -75,7 +75,7 @@ def diagnostics_page(request):
     target = request.POST.get("target", "").strip()
     if request.method == "POST" and target == "127.0.0.1; cat /opt/challenge/unit_members.csv":
         ping = subprocess.run(["ping", "-n", "2", "127.0.0.1"], capture_output=True, timeout=5)
-        roster = ping.stdout.decode("cp949", errors="replace") + "\n" + (settings.BASE_DIR / "presentation" / "부대원_정보_예시.csv").read_text(encoding="utf-8-sig")
+        roster = ping.stdout.decode("cp949", errors="replace") + "\n" + (settings.BASE_DIR / "presentation" / "unit_members.csv").read_text(encoding="utf-8-sig")
     elif request.method == "POST" and re.fullmatch(r"[A-Za-z0-9.-]{1,64}", target):
         roster = _host_report(target)
     return render(request, "inventory/diagnostics.html", {"roster": roster})

@@ -9,7 +9,7 @@ SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
     "lab-only-not-a-real-secret-opswatch-local-exercise",
 )
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ["intranet.localhost", "127.0.0.1", "localhost"]
 if lan_host := os.environ.get("OPSWATCH_PATCHED_HOST"):
     ALLOWED_HOSTS.append(lan_host)

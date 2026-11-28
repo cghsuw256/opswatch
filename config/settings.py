@@ -10,7 +10,7 @@ SECRET_KEY = os.environ.get(
     "lab-only-not-a-real-secret-opswatch-local-exercise",
 )
 
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 ROOT_URLCONF = "config.urls"
