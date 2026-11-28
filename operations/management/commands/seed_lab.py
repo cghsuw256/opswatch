@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand, CommandError
 from operations.models import Employee
 from unit_portal.models import Notice
 
-# Fake lab credentials. Not production values.
+#credentials.
 MAINT_USERNAME = "maint"
 MAINT_PASSWORD = "maint123"
 

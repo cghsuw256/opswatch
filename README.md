@@ -4,7 +4,7 @@
 
 ## 실행
 
-Python 3.10 이상이 필요합니다. Django가 설치돼 있지 않으면 `python -m pip install -r app/requirements.txt`를 한 번 실행하세요. 가상환경은 필수가 아닙니다.
+Python 3.10 이상이 필요합니다. Django가 설치돼 있지 않으면 `python -m pip install -r requirements.txt`를 한 번 실행하세요. 가상환경은 필수가 아닙니다.
 
 ```powershell
 python manage.py runserver
